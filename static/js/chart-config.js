@@ -10,8 +10,8 @@ const SPARK = {
     strokeDim: 'rgba(255, 255, 255, 0.2)',
     grid: 'rgba(255, 255, 255, 0.04)',
     tick: 'rgba(255, 255, 255, 0.4)',
-    tooltipBg: '#131315',
-    warning: '#FF9500',
+    tooltipBg: '#171b22',
+    warning: '#f5a623',
 };
 
 // Sparkline warning thresholds — line turns orange above these values
@@ -68,8 +68,8 @@ function getBaseChartOptions() {
             },
             tooltip: {
                 backgroundColor: SPARK.tooltipBg,
-                titleColor: '#ffffff',
-                bodyColor: 'rgba(255,255,255,0.7)',
+                titleColor: '#eef0f4',
+                bodyColor: 'rgba(238, 240, 244, 0.7)',
                 borderWidth: 0,
                 cornerRadius: 4,
                 displayColors: false,
@@ -85,19 +85,19 @@ function getBaseChartOptions() {
 const METRIC_FILL_COLORS = {
     utilization: '130, 177, 255',
     temperature: '255, 183, 77',
-    memory:      '100, 210, 255',
-    power:       '134, 239, 172',
-    fanSpeed:    '186, 147, 216',
-    clocks:      '255, 213, 130',
-    efficiency:  '168, 216, 185',
-    pcie:        '176, 190, 210',
-    appclocks:   '255, 213, 130',
-    systemCpu:   '255, 255, 255',
-    systemMemory:'255, 255, 255',
-    systemSwap:  '255, 255, 255',
+    memory: '100, 210, 255',
+    power: '134, 239, 172',
+    fanSpeed: '186, 147, 216',
+    clocks: '255, 213, 130',
+    efficiency: '168, 216, 185',
+    pcie: '176, 190, 210',
+    appclocks: '255, 213, 130',
+    systemCpu: '255, 255, 255',
+    systemMemory: '255, 255, 255',
+    systemSwap: '255, 255, 255',
     systemNetIo: '255, 255, 255',
-    systemDiskIo:'255, 255, 255',
-    systemLoadAvg:'255, 255, 255',
+    systemDiskIo: '255, 255, 255',
+    systemLoadAvg: '255, 255, 255',
 };
 
 // Single-line sparkline config
@@ -135,14 +135,14 @@ function createLineChartConfig(options) {
     if (options.ySuggestedMax) config.options.scales.y.suggestedMax = options.ySuggestedMax;
     if (yStepSize) config.options.scales.y.ticks.stepSize = yStepSize;
     if (yUnit) {
-        config.options.scales.y.ticks.callback = function(value) {
+        config.options.scales.y.ticks.callback = function (value) {
             return value + yUnit;
         };
     }
 
     config.options.plugins.tooltip.callbacks = {
-        title: function() { return tooltipTitle; },
-        label: function(context) {
+        title: function () { return tooltipTitle; },
+        label: function (context) {
             const displayLabel = tooltipLabel || context.dataset.label || '';
             const value = context.parsed.y;
             return `${displayLabel}: ${value.toFixed(decimals)}${yUnit || ''}`;
@@ -187,7 +187,7 @@ function createMultiLineChartConfig(options) {
 
     if (ySuggestedMax) config.options.scales.y.suggestedMax = ySuggestedMax;
     if (yUnit) {
-        config.options.scales.y.ticks.callback = function(value) {
+        config.options.scales.y.ticks.callback = function (value) {
             return value.toFixed(decimals) + yUnit;
         };
     }
@@ -207,8 +207,8 @@ function createMultiLineChartConfig(options) {
     }
 
     config.options.plugins.tooltip.callbacks = {
-        title: function() { return tooltipTitle; },
-        label: function(context) {
+        title: function () { return tooltipTitle; },
+        label: function (context) {
             const label = context.dataset.label || '';
             const value = context.parsed.y;
             return `${label}: ${value.toFixed(decimals)}${yUnit || ''}`;

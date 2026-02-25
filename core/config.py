@@ -5,7 +5,7 @@ Configuration settings for GPU Hot
 import os
 import socket
 
-# Flask Configuration
+# Server Configuration
 SECRET_KEY = 'gpu_hot_secret'
 HOST = '0.0.0.0'
 PORT = 1312

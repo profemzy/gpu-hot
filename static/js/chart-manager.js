@@ -114,11 +114,6 @@ function updatePCIeChartStats(gpuId, statsRX, statsTX) {
     if (txCurEl) txCurEl.textContent = fmtBw(statsTX.current);
 }
 
-// Update mobile chart header value
-function updateMobileChartValue(gpuId, chartType, value, unit) {
-    // No special mobile header in new design — stats show inline
-}
-
 // Update chart data
 function updateChart(gpuId, chartType, value, value2, value3, value4) {
     if (!gpuId || !chartType) return;

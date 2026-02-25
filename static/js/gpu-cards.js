@@ -42,89 +42,9 @@ function bulletClass(value, warnThreshold, dangerThreshold) {
     return '';
 }
 
-// Track enhanced overview mode
-let isEnhancedOverview = false;
-
-// ============================================
-// Overview Card (All GPUs view) — flat row
-// ============================================
-
-function createOverviewCard(gpuId, gpuInfo) {
-    const memory_used = getMetricValue(gpuInfo, 'memory_used', 0);
-    const memory_total = getMetricValue(gpuInfo, 'memory_total', 1);
-    const memPercent = (memory_used / memory_total) * 100;
-    const utilization = getMetricValue(gpuInfo, 'utilization', 0);
-    const temperature = getMetricValue(gpuInfo, 'temperature', 0);
-    const power_draw = getMetricValue(gpuInfo, 'power_draw', 0);
-    const power_limit = getMetricValue(gpuInfo, 'power_limit', 1);
-    const powerPercent = (power_draw / power_limit) * 100;
-
-    return `
-        <div class="overview-gpu-card" data-gpu-id="${gpuId}" onclick="switchToView('gpu-${gpuId}')">
-            <div class="overview-gpu-name">
-                <h2>GPU ${gpuId}</h2>
-                <p>${getMetricValue(gpuInfo, 'name', 'Unknown GPU')}</p>
-            </div>
-            <div class="overview-metrics">
-                <div class="overview-metric">
-                    <div class="overview-metric-value ${bulletClass(utilization, 80, 95)}" id="overview-util-${gpuId}">${utilization}%</div>
-                    <div class="overview-metric-label">UTIL</div>
-                </div>
-                <div class="overview-metric">
-                    <div class="overview-metric-value ${bulletClass(temperature, 75, 85)}" id="overview-temp-${gpuId}">${temperature}°</div>
-                    <div class="overview-metric-label">TEMP</div>
-                </div>
-                <div class="overview-metric">
-                    <div class="overview-metric-value ${bulletClass(memPercent, 85, 95)}" id="overview-mem-${gpuId}">${Math.round(memPercent)}%</div>
-                    <div class="overview-metric-label">MEM</div>
-                </div>
-                <div class="overview-metric">
-                    <div class="overview-metric-value ${bulletClass(powerPercent, 80, 95)}" id="overview-power-${gpuId}">${power_draw.toFixed(0)}W</div>
-                    <div class="overview-metric-label">POWER</div>
-                </div>
-            </div>
-            <div class="overview-mini-chart">
-                <canvas id="overview-chart-${gpuId}"></canvas>
-            </div>
-        </div>
-    `;
-}
-
-// Update overview card
+// Update overview card — delegates to enhanced updater
 function updateOverviewCard(gpuId, gpuInfo, shouldUpdateDOM = true) {
-    // Delegate to enhanced updater if enhanced overview is active
-    if (isEnhancedOverview) {
-        updateEnhancedOverviewCard(gpuId, gpuInfo, shouldUpdateDOM);
-        return;
-    }
-
-    const utilization = getMetricValue(gpuInfo, 'utilization', 0);
-    const temperature = getMetricValue(gpuInfo, 'temperature', 0);
-    const memory_used = getMetricValue(gpuInfo, 'memory_used', 0);
-    const memory_total = getMetricValue(gpuInfo, 'memory_total', 1);
-    const power_draw = getMetricValue(gpuInfo, 'power_draw', 0);
-    const power_limit = getMetricValue(gpuInfo, 'power_limit', 1);
-    const memPercent = (memory_used / memory_total) * 100;
-    const powerPercent = (power_draw / power_limit) * 100;
-
-    if (shouldUpdateDOM) {
-        const utilEl = document.getElementById(`overview-util-${gpuId}`);
-        const tempEl = document.getElementById(`overview-temp-${gpuId}`);
-        const memEl = document.getElementById(`overview-mem-${gpuId}`);
-        const powerEl = document.getElementById(`overview-power-${gpuId}`);
-
-        if (utilEl) { utilEl.textContent = `${utilization}%`; utilEl.className = `overview-metric-value ${bulletClass(utilization, 80, 95)}`; }
-        if (tempEl) { tempEl.textContent = `${temperature}°`; tempEl.className = `overview-metric-value ${bulletClass(temperature, 75, 85)}`; }
-        if (memEl) { memEl.textContent = `${Math.round(memPercent)}%`; memEl.className = `overview-metric-value ${bulletClass(memPercent, 85, 95)}`; }
-        if (powerEl) { powerEl.textContent = `${power_draw.toFixed(0)}W`; powerEl.className = `overview-metric-value ${bulletClass(powerPercent, 80, 95)}`; }
-    }
-
-    // Always update chart data
-    updateChart(gpuId, 'utilization', Number(getMetricValue(gpuInfo, 'utilization', 0)));
-
-    if (charts[gpuId] && charts[gpuId].overviewMini) {
-        charts[gpuId].overviewMini.update('none');
-    }
+    updateEnhancedOverviewCard(gpuId, gpuInfo, shouldUpdateDOM);
 }
 
 // ============================================
@@ -132,7 +52,6 @@ function updateOverviewCard(gpuId, gpuInfo, shouldUpdateDOM = true) {
 // ============================================
 
 function createEnhancedOverviewCard(gpuId, gpuInfo) {
-    isEnhancedOverview = true;
 
     const memory_used = getMetricValue(gpuInfo, 'memory_used', 0);
     const memory_total = getMetricValue(gpuInfo, 'memory_total', 1);
@@ -1048,7 +967,7 @@ function updateProcesses(processes) {
 
     if (countEl) {
         countEl.textContent = processes.length === 0 ? '0' :
-                             `${processes.length}`;
+            `${processes.length}`;
     }
 
     if (processes.length === 0) {

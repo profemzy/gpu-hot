@@ -4,24 +4,24 @@
    ============================================ */
 
 :root {
-    /* Background */
-    --bg-primary: #09090b;
-    --bg-surface: #131315;
-    --bg-elevated: #1a1a1c;
+    /* Background — warm dark slate */
+    --bg-primary: #111318;
+    --bg-surface: #171b22;
+    --bg-elevated: #1e2330;
 
-    /* Text */
-    --text-primary: #FFFFFF;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-tertiary: rgba(255, 255, 255, 0.5);
+    /* Text — slightly warm white */
+    --text-primary: #eef0f4;
+    --text-secondary: rgba(238, 240, 244, 0.72);
+    --text-tertiary: rgba(238, 240, 244, 0.45);
 
     /* Accent — Steel Blue at 20% opacity, for selection/active only */
-    --accent: rgba(66, 133, 244, 0.20);
-    --accent-text: #4285F4;
+    --accent: rgba(100, 160, 255, 0.18);
+    --accent-text: #6ea8fe;
 
     /* Signal — color is forbidden except for warnings */
-    --warning: #FF9500;
-    --danger: #FF2D2D;
-    --ok: rgba(255, 255, 255, 0.5);
+    --warning: #f5a623;
+    --danger: #f44;
+    --ok: rgba(238, 240, 244, 0.5);
 
     /* Metric Identity Colors (RGB channels for flexible opacity) */
     --metric-util: 130, 177, 255;
@@ -34,12 +34,12 @@
     --metric-pcie: 176, 190, 210;
 
     /* Sparkline */
-    --spark-stroke: rgba(255, 255, 255, 0.6);
-    --spark-stroke-secondary: rgba(255, 255, 255, 0.35);
+    --spark-stroke: rgba(238, 240, 244, 0.6);
+    --spark-stroke-secondary: rgba(238, 240, 244, 0.35);
 
     /* Bullet bar */
-    --bar-track: rgba(255, 255, 255, 0.08);
-    --bar-fill: rgba(255, 255, 255, 0.25);
+    --bar-track: rgba(255, 255, 255, 0.07);
+    --bar-fill: rgba(255, 255, 255, 0.22);
     --bar-fill-warning: var(--warning);
     --bar-fill-danger: var(--danger);
 
@@ -59,14 +59,23 @@
     --font-mono: 'SF Mono', 'Menlo', 'Consolas', 'Liberation Mono', monospace;
 
     /* Borders — kept minimal, only for structure */
-    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.07);
+
+    /* Transitions */
+    --transition-fast: 0.1s ease;
+    --transition-normal: 0.2s ease;
+
+    /* Accent glow (connected status) */
+    --accent-glow: rgba(130, 200, 130, 0.6);
 }
 
 /* ============================================
    Reset
    ============================================ */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;

@@ -19,14 +19,14 @@ function connectWebSocket() {
     if (socket && (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN)) {
         return; // Already connected or connecting
     }
-    
+
     socket = createWebSocketConnection();
     setupWebSocketHandlers();
 }
 
 function setupWebSocketHandlers() {
     if (!socket) return;
-    
+
     socket.onopen = handleSocketOpen;
     socket.onmessage = handleSocketMessage;
     socket.onclose = handleSocketClose;
@@ -38,11 +38,11 @@ function handleSocketOpen() {
     reconnectAttempts = 0;
     clearInterval(reconnectInterval);
     reconnectInterval = null;
-    
+
     const statusEl = document.getElementById('connection-status');
     if (statusEl) {
         statusEl.textContent = 'Connected';
-        statusEl.style.color = 'rgba(255,255,255,0.5)';
+        statusEl.style.color = '';
         const dot = document.getElementById('status-dot');
         if (dot) dot.classList.add('connected');
     }
@@ -50,15 +50,15 @@ function handleSocketOpen() {
 
 function handleSocketClose() {
     console.log('Disconnected from server');
-    
+
     const statusEl = document.getElementById('connection-status');
     if (statusEl) {
         statusEl.textContent = 'Reconnecting...';
-        statusEl.style.color = '#FF9500';
+        statusEl.style.color = '#f5a623';
         const dot = document.getElementById('status-dot');
         if (dot) dot.classList.remove('connected');
     }
-    
+
     // Attempt to reconnect
     attemptReconnect();
 }
@@ -68,13 +68,13 @@ function handleSocketError(error) {
     const statusEl = document.getElementById('connection-status');
     if (statusEl) {
         statusEl.textContent = 'Error';
-        statusEl.style.color = '#FF2D2D';
+        statusEl.style.color = '#f44';
     }
 }
 
 function attemptReconnect() {
     if (reconnectInterval) return; // Already trying to reconnect
-    
+
     reconnectInterval = setInterval(() => {
         if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
             clearInterval(reconnectInterval);
@@ -82,13 +82,13 @@ function attemptReconnect() {
             const statusEl = document.getElementById('connection-status');
             if (statusEl) {
                 statusEl.textContent = 'Disconnected';
-                statusEl.style.color = '#FF2D2D';
+                statusEl.style.color = '#f44';
                 statusEl.style.cursor = 'pointer';
                 statusEl.onclick = () => location.reload();
             }
             return;
         }
-        
+
         reconnectAttempts++;
         console.log(`Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
         connectWebSocket();
@@ -115,12 +115,12 @@ function setupScrollDetection() {
             isScrolling = false;
         }, SCROLL_PAUSE_DURATION);
     };
-    
+
     // Wait for DOM to be ready
     setTimeout(() => {
         // Listen to window scroll (primary scroll container)
         window.addEventListener('scroll', handleScroll, { passive: true });
-        
+
         // Also listen to .main as fallback
         const main = document.querySelector('.main');
         if (main) {
@@ -149,17 +149,17 @@ function handleSocketMessage(event) {
         handleClusterData(data);
         return;
     }
-    
+
     const overviewContainer = document.getElementById('overview-container');
 
     // Clear loading state
-    if (overviewContainer.innerHTML.includes('Loading GPU data')) {
+    if (overviewContainer.querySelector('.loading')) {
         overviewContainer.innerHTML = '';
     }
 
     const gpuCount = Object.keys(data.gpus).length;
     const now = Date.now();
-    
+
     // Performance: Skip ALL DOM updates during active scrolling
     if (isScrolling) {
         // Still update chart data arrays (lightweight) to maintain continuity
@@ -187,7 +187,7 @@ function handleSocketMessage(event) {
         });
         return; // Exit early - zero DOM work during scroll = smooth 60 FPS
     }
-    
+
     // Process each GPU - queue updates for batched rendering
     Object.keys(data.gpus).forEach(gpuId => {
         const gpuInfo = data.gpus[gpuId];
@@ -240,7 +240,7 @@ function handleSocketMessage(event) {
             lastDOMUpdate[gpuId] = now;
         }
     });
-    
+
     // Queue system updates (processes/CPU/RAM) for batching
     if (!lastDOMUpdate.system || (now - lastDOMUpdate.system) >= DOM_UPDATE_INTERVAL) {
         pendingUpdates.set('_system', {
@@ -249,14 +249,14 @@ function handleSocketMessage(event) {
             now
         });
     }
-    
+
     // Schedule single batched render (if not already scheduled)
     // This ensures all updates happen in ONE animation frame
     if (!rafScheduled && pendingUpdates.size > 0) {
         rafScheduled = true;
         requestAnimationFrame(processBatchedUpdates);
     }
-    
+
     // Auto-switch to single GPU view if only 1 GPU detected (first time only)
     autoSwitchSingleGPU(gpuCount, Object.keys(data.gpus));
 }
@@ -270,7 +270,7 @@ function handleSocketMessage(event) {
  */
 function processBatchedUpdates() {
     rafScheduled = false;
-    
+
     // Execute all queued updates in a single batch
     pendingUpdates.forEach((update, gpuId) => {
         if (gpuId === '_system') {
@@ -281,27 +281,27 @@ function processBatchedUpdates() {
         } else {
             // GPU updates
             const { gpuInfo, systemInfo, sourceKey, shouldUpdateDOM, now } = update;
-            
+
             // Update overview card (always for charts, conditionally for text)
             updateOverviewCard(gpuId, gpuInfo, shouldUpdateDOM);
             if (shouldUpdateDOM) {
                 lastDOMUpdate[gpuId] = now;
             }
-            
+
             // Performance: Only update detail view if tab is visible
             // Invisible tabs = zero wasted processing
             const isDetailTabVisible = currentTab === `gpu-${gpuId}`;
             if (isDetailTabVisible || !registeredGPUs.has(gpuId)) {
                 ensureGPUTab(gpuId, gpuInfo, shouldUpdateDOM && isDetailTabVisible);
             }
-            
+
             // Update per-GPU system charts
             if (systemInfo) {
                 updateGPUSystemCharts(gpuId, systemInfo, sourceKey || '_local', shouldUpdateDOM && isDetailTabVisible);
             }
         }
     });
-    
+
     // Clear queue for next batch
     pendingUpdates.clear();
 }
@@ -317,13 +317,13 @@ function processBatchedUpdates() {
  */
 function updateAllChartDataOnly(gpuId, gpuInfo) {
     if (!chartData[gpuId]) return;
-    
+
     const timestamp = new Date().toLocaleTimeString();
     const memory_used = gpuInfo.memory_used || 0;
     const memory_total = gpuInfo.memory_total || 1;
     const memPercent = (memory_used / memory_total) * 100;
     const power_draw = gpuInfo.power_draw || 0;
-    
+
     // Prepare all metric updates
     const metrics = {
         utilization: gpuInfo.utilization || 0,
@@ -333,15 +333,15 @@ function updateAllChartDataOnly(gpuId, gpuInfo) {
         fanSpeed: gpuInfo.fan_speed || 0,
         efficiency: power_draw > 0 ? (gpuInfo.utilization || 0) / power_draw : 0
     };
-    
+
     // Update single-line charts
     Object.entries(metrics).forEach(([chartType, value]) => {
         const data = chartData[gpuId][chartType];
         if (!data?.labels || !data?.data) return;
-        
+
         data.labels.push(timestamp);
         data.data.push(Number(value) || 0);
-        
+
         // Add threshold lines for specific charts
         if (chartType === 'utilization' && data.thresholdData) {
             data.thresholdData.push(80);
@@ -351,7 +351,7 @@ function updateAllChartDataOnly(gpuId, gpuInfo) {
         } else if (chartType === 'memory' && data.thresholdData) {
             data.thresholdData.push(90);
         }
-        
+
         // Maintain rolling window (120 points = 60s at 0.5s interval)
         if (data.labels.length > 120) {
             data.labels.shift();
@@ -361,7 +361,7 @@ function updateAllChartDataOnly(gpuId, gpuInfo) {
             if (data.dangerData) data.dangerData.shift();
         }
     });
-    
+
     // Update multi-line charts (clocks)
     const clocksData = chartData[gpuId].clocks;
     if (clocksData?.labels) {
@@ -369,7 +369,7 @@ function updateAllChartDataOnly(gpuId, gpuInfo) {
         clocksData.graphicsData.push(gpuInfo.clock_graphics || 0);
         clocksData.smData.push(gpuInfo.clock_sm || 0);
         clocksData.memoryData.push(gpuInfo.clock_memory || 0);
-        
+
         if (clocksData.labels.length > 120) {
             clocksData.labels.shift();
             clocksData.graphicsData.shift();
@@ -412,12 +412,12 @@ window.addEventListener('focus', () => {
 function handleClusterData(data) {
     const overviewContainer = document.getElementById('overview-container');
     const now = Date.now();
-    
+
     // Clear loading state
-    if (overviewContainer.innerHTML.includes('Loading GPU data')) {
+    if (overviewContainer.querySelector('.loading')) {
         overviewContainer.innerHTML = '';
     }
-    
+
     // Skip DOM updates during scrolling
     if (isScrolling) {
         // Still update chart data for continuity
@@ -448,7 +448,7 @@ function handleClusterData(data) {
         });
         return;
     }
-    
+
     // Render GPUs grouped by node (minimal grouping)
     Object.entries(data.nodes).forEach(([nodeName, nodeData]) => {
         // Get or create node group container
@@ -462,14 +462,14 @@ function handleClusterData(data) {
             `);
             nodeGroup = overviewContainer.querySelector(`[data-node="${nodeName}"]`);
         }
-        
+
         const nodeGrid = nodeGroup.querySelector('.node-grid');
-        
+
         if (nodeData.status === 'online') {
             // Node is online - process its GPUs normally
             Object.entries(nodeData.gpus).forEach(([gpuId, gpuInfo]) => {
                 const fullGpuId = `${nodeName}-${gpuId}`;
-                
+
                 // Initialize chart data with current values
                 if (!chartData[fullGpuId]) {
                     initGPUData(fullGpuId, {
@@ -484,7 +484,7 @@ function handleClusterData(data) {
                         powerLimit: gpuInfo.power_limit
                     });
                 }
-                
+
                 // Queue update
                 const shouldUpdateDOM = !lastDOMUpdate[fullGpuId] || (now - lastDOMUpdate[fullGpuId]) >= DOM_UPDATE_INTERVAL;
                 pendingUpdates.set(fullGpuId, {
@@ -495,7 +495,7 @@ function handleClusterData(data) {
                     now,
                     nodeName
                 });
-                
+
                 // Create card if doesn't exist
                 const existingCard = nodeGrid.querySelector(`[data-gpu-id="${fullGpuId}"]`);
                 if (!existingCard) {
@@ -519,12 +519,12 @@ function handleClusterData(data) {
                 // Remove the GPU tab
                 removeGPUTab(gpuId);
             });
-            
+
             // Remove the entire node group from the UI
             nodeGroup.remove();
         }
     });
-    
+
     // Update processes and system info (use first online node)
     const firstOnlineNode = Object.values(data.nodes).find(n => n.status === 'online');
     if (firstOnlineNode) {
@@ -536,7 +536,7 @@ function handleClusterData(data) {
             });
         }
     }
-    
+
     // Schedule batched render
     if (!rafScheduled && pendingUpdates.size > 0) {
         rafScheduled = true;

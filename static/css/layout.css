@@ -39,6 +39,15 @@
     writing-mode: vertical-lr;
     transform: rotate(180deg);
     user-select: none;
+    background: linear-gradient(to bottom, var(--text-secondary), var(--text-tertiary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transition: opacity var(--transition-normal);
+}
+
+.sidebar-logo:hover {
+    opacity: 0.8;
 }
 
 /* GPU nav list */
@@ -156,7 +165,7 @@
     overscroll-behavior-y: contain;
 }
 
-/* Header — minimal */
+/* Header */
 .header {
     margin-bottom: var(--space-xl);
 }
@@ -240,7 +249,7 @@
     gap: var(--space-sm);
 }
 
-.node-group + .node-group {
+.node-group+.node-group {
     padding-top: var(--space-lg);
     border-top: 1px solid var(--border-subtle);
 }
@@ -284,8 +293,37 @@
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Loading dot — simple pulsing circle */
+.loading-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-tertiary);
+    margin-right: var(--space-sm);
+    animation: pulse-loading 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-loading {
+
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: scale(0.85);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 /* ============================================
