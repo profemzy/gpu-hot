@@ -1,9 +1,12 @@
 """GPU metrics collector using NVML"""
 
 import time
+import logging
 import pynvml
 from datetime import datetime
 from .utils import safe_get, decode_bytes, to_mib, to_watts
+
+logger = logging.getLogger(__name__)
 
 
 class MetricsCollector:
@@ -267,29 +270,54 @@ class MetricsCollector:
     
     def _add_media_engines(self, handle, data):
         """Encoder/decoder metrics"""
-        # Encoder
-        if enc := safe_get(pynvml.nvmlDeviceGetEncoderUtilization, handle):
-            if isinstance(enc, tuple) and len(enc) >= 2:
-                data['encoder_utilization'] = float(enc[0])
+        if not hasattr(self, '_media_logged'):
+            self._media_logged = False
         
+        # Encoder utilization — only set when GPU supports it
         try:
-            if sessions := pynvml.nvmlDeviceGetEncoderSessions(handle):
-                data['encoder_sessions'] = len(sessions)
-                if fps := [s.averageFps for s in sessions if hasattr(s, 'averageFps')]:
+            enc_util, enc_period = pynvml.nvmlDeviceGetEncoderUtilization(handle)
+            data['encoder_utilization'] = float(enc_util)
+        except pynvml.NVMLError as e:
+            if not self._media_logged:
+                logger.info(f"Encoder utilization not available: {e}")
+        except Exception as e:
+            if not self._media_logged:
+                logger.info(f"Encoder utilization error: {e}")
+        
+        # Encoder sessions
+        try:
+            sessions = pynvml.nvmlDeviceGetEncoderSessions(handle)
+            data['encoder_sessions'] = len(sessions) if sessions else 0
+            if sessions:
+                fps = [s.averageFps for s in sessions if hasattr(s, 'averageFps')]
+                if fps:
                     data['encoder_fps'] = float(sum(fps) / len(fps))
-        except:
+        except pynvml.NVMLError:
+            pass
+        except Exception:
             pass
         
-        # Decoder
-        if dec := safe_get(pynvml.nvmlDeviceGetDecoderUtilization, handle):
-            if isinstance(dec, tuple) and len(dec) >= 2:
-                data['decoder_utilization'] = float(dec[0])
-        
+        # Decoder utilization — only set when GPU supports it
         try:
-            if sessions := pynvml.nvmlDeviceGetDecoderSessions(handle):
-                data['decoder_sessions'] = len(sessions)
-        except:
+            dec_util, dec_period = pynvml.nvmlDeviceGetDecoderUtilization(handle)
+            data['decoder_utilization'] = float(dec_util)
+        except pynvml.NVMLError as e:
+            if not self._media_logged:
+                logger.info(f"Decoder utilization not available: {e}")
+        except Exception as e:
+            if not self._media_logged:
+                logger.info(f"Decoder utilization error: {e}")
+        
+        # Decoder sessions
+        try:
+            sessions = pynvml.nvmlDeviceGetDecoderSessions(handle)
+            data['decoder_sessions'] = len(sessions) if sessions else 0
+        except pynvml.NVMLError:
             pass
+        except Exception:
+            pass
+        
+        self._media_logged = True
     
     def _add_health_status(self, handle, data):
         """ECC and health metrics"""

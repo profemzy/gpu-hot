@@ -332,12 +332,14 @@ function createGPUCard(gpuId, gpuInfo) {
     }
 
     if (hasMetric(gpuInfo, 'encoder_sessions')) {
+        const encUtil = hasMetric(gpuInfo, 'encoder_utilization') ? `${gpuInfo.encoder_utilization}%` : '';
         extraMetrics += `
             <div class="metric-cell">
                 <div class="metric-num-row">
                     <span class="metric-num" id="encoder-${gpuId}">${gpuInfo.encoder_sessions}</span>
                 </div>
                 <span class="metric-label">ENC SESS</span>
+                ${encUtil ? `<span class="metric-sub" id="enc-util-${gpuId}">${encUtil} utilization</span>` : ''}
             </div>`;
     }
 
@@ -377,12 +379,14 @@ function createGPUCard(gpuId, gpuInfo) {
     }
 
     if (hasMetric(gpuInfo, 'decoder_sessions')) {
+        const decUtil = hasMetric(gpuInfo, 'decoder_utilization') ? `${gpuInfo.decoder_utilization}%` : '';
         extraMetrics += `
             <div class="metric-cell">
                 <div class="metric-num-row">
                     <span class="metric-num" id="decoder-${gpuId}">${gpuInfo.decoder_sessions}</span>
                 </div>
                 <span class="metric-label">DEC SESS</span>
+                ${decUtil ? `<span class="metric-sub" id="dec-util-${gpuId}">${decUtil} utilization</span>` : ''}
             </div>`;
     }
 
@@ -506,6 +510,27 @@ function createGPUCard(gpuId, gpuInfo) {
                     </div>
                 </div>
                 <div class="sparkline-canvas-wrap"><canvas id="chart-appclocks-${gpuId}"></canvas></div>
+            </div>`;
+    }
+
+    let encDecChart = '';
+    if (hasMetric(gpuInfo, 'encoder_utilization') || hasMetric(gpuInfo, 'decoder_utilization')) {
+        encDecChart = `
+            <div class="sparkline-container" data-chart-type="encoderDecoder" data-gpu-id="${gpuId}">
+                <div class="sparkline-header">
+                    <span class="sparkline-title">Encoder / Decoder</span>
+                    <div class="sparkline-stats">
+                        <div class="sparkline-stat">
+                            <span class="sparkline-stat-label">Enc</span>
+                            <span class="sparkline-stat-value" id="stat-encDec-enc-current-${gpuId}">0%</span>
+                        </div>
+                        <div class="sparkline-stat">
+                            <span class="sparkline-stat-label">Dec</span>
+                            <span class="sparkline-stat-value" id="stat-encDec-dec-current-${gpuId}">0%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sparkline-canvas-wrap"><canvas id="chart-encoderDecoder-${gpuId}"></canvas></div>
             </div>`;
     }
 
@@ -675,6 +700,7 @@ function createGPUCard(gpuId, gpuInfo) {
 
                     ${pcieChart}
                     ${appClocksChart}
+                    ${encDecChart}
                 </div>
             </div>
 
@@ -838,6 +864,10 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
         if (pstateEl) pstateEl.textContent = `${getMetricValue(gpuInfo, 'performance_state', 'N/A')}`;
         if (encoderEl) encoderEl.textContent = `${getMetricValue(gpuInfo, 'encoder_sessions', 0)}`;
 
+        // Encoder/Decoder utilization sub-labels
+        const encUtilEl = document.getElementById(`enc-util-${gpuId}`);
+        if (encUtilEl) encUtilEl.textContent = `${getMetricValue(gpuInfo, 'encoder_utilization', 0)}% utilization`;
+
         // Header badges
         const pstateHeaderEl = document.getElementById(`pstate-header-${gpuId}`);
         const pcieHeaderEl = document.getElementById(`pcie-header-${gpuId}`);
@@ -872,6 +902,8 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
             const ds = getMetricValue(gpuInfo, 'decoder_sessions', null);
             decoderEl.textContent = ds !== null ? `${ds}` : 'N/A';
         }
+        const decUtilEl = document.getElementById(`dec-util-${gpuId}`);
+        if (decUtilEl) decUtilEl.textContent = `${getMetricValue(gpuInfo, 'decoder_utilization', 0)}% utilization`;
         if (throttleEl) {
             const tr = getMetricValue(gpuInfo, 'throttle_reasons', 'None');
             const isT = tr && tr !== 'None' && tr !== 'N/A';
@@ -953,6 +985,13 @@ function updateGPUDisplay(gpuId, gpuInfo, shouldUpdateDOM = true) {
             gpuInfo.clock_memory_app || gpuInfo.clock_memory || 0,
             gpuInfo.clock_sm_app || gpuInfo.clock_sm || 0,
             gpuInfo.clock_video_app || gpuInfo.clock_video || 0
+        );
+    }
+
+    if (hasMetric(gpuInfo, 'encoder_utilization') || hasMetric(gpuInfo, 'decoder_utilization')) {
+        updateChart(gpuId, 'encoderDecoder',
+            gpuInfo.encoder_utilization || 0,
+            gpuInfo.decoder_utilization || 0
         );
     }
 }

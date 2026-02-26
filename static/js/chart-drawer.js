@@ -42,6 +42,7 @@ const chartMeta = {
     efficiency: { title: 'Power Efficiency', unit: ' %/W', decimals: 2 },
     pcie: { title: 'PCIe Throughput', unit: ' KB/s', decimals: 0 },
     appclocks: { title: 'App Clocks', unit: ' MHz', decimals: 0 },
+    encoderDecoder: { title: 'Encoder / Decoder', unit: '%', decimals: 0, yMax: 100 },
     systemCpu: { title: 'CPU Usage', unit: '%', decimals: 1, yMax: 100 },
     systemMemory: { title: 'RAM Usage', unit: '%', decimals: 1, yMax: 100 },
     systemSwap: { title: 'Swap Usage', unit: '%', decimals: 1, yMax: 100 },
@@ -64,6 +65,7 @@ const companionMap = {
     efficiency: ['utilization', 'power'],
     pcie: ['utilization', 'memory'],
     appclocks: ['utilization', 'power'],
+    encoderDecoder: ['utilization', 'power', 'memory'],
     systemCpu: ['systemMemory', 'systemSwap', 'systemLoadAvg'],
     systemMemory: ['systemCpu', 'systemSwap'],
     systemSwap: ['systemMemory', 'systemCpu'],
@@ -84,6 +86,7 @@ function getPrimaryDataArray(gpuId, type) {
         case 'clocks': return d.graphicsData;
         case 'pcie': return d.dataRX;
         case 'appclocks': return d.dataGr;
+        case 'encoderDecoder': return d.dataEnc;
         case 'systemNetIo': return d.dataRX;
         case 'systemDiskIo': return d.dataRead;
         case 'systemLoadAvg': return d.data1m;
@@ -182,13 +185,14 @@ function createDrawerChart() {
     const primaryArr = getPrimaryDataArray(gpuId, chartType);
 
     // Multi-line primary types get all their sub-lines
-    const isMultiLine = ['clocks', 'pcie', 'appclocks', 'systemNetIo', 'systemDiskIo', 'systemLoadAvg'].includes(chartType);
+    const isMultiLine = ['clocks', 'pcie', 'appclocks', 'encoderDecoder', 'systemNetIo', 'systemDiskIo', 'systemLoadAvg'].includes(chartType);
 
     if (isMultiLine) {
         const multiDefs = {
             clocks: [{ key: 'graphicsData', label: 'Graphics' }, { key: 'smData', label: 'SM' }, { key: 'memoryData', label: 'Memory' }],
             pcie: [{ key: 'dataRX', label: 'RX' }, { key: 'dataTX', label: 'TX' }],
             appclocks: [{ key: 'dataGr', label: 'Graphics' }, { key: 'dataMem', label: 'Memory' }, { key: 'dataSM', label: 'SM' }, { key: 'dataVideo', label: 'Video' }],
+            encoderDecoder: [{ key: 'dataEnc', label: 'Encoder' }, { key: 'dataDec', label: 'Decoder' }],
             systemNetIo: [{ key: 'dataRX', label: 'RX' }, { key: 'dataTX', label: 'TX' }],
             systemDiskIo: [{ key: 'dataRead', label: 'Read' }, { key: 'dataWrite', label: 'Write' }],
             systemLoadAvg: [{ key: 'data1m', label: '1m' }, { key: 'data5m', label: '5m' }, { key: 'data15m', label: '15m' }],

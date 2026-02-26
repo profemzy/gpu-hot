@@ -22,7 +22,8 @@ def parse_nvidia_smi():
             'clocks.max.gr,clocks.max.sm,clocks.max.mem,'
             'pcie.link.gen.current,pcie.link.gen.max,pcie.link.width.current,pcie.link.width.max,'
             'encoder.stats.sessionCount,encoder.stats.averageFps,encoder.stats.averageLatency,'
-            'pstate,compute_mode',
+            'pstate,compute_mode,'
+            'utilization.encoder,utilization.decoder',
             '--format=csv,noheader,nounits'
         ], capture_output=True, text=True, timeout=10)
         
@@ -74,6 +75,8 @@ def parse_nvidia_smi():
                         'decoder_latency': 0,
                         'performance_state': parts[27] if len(parts) > 27 and parts[27] not in ['N/A', '[N/A]', ''] else 'N/A',
                         'compute_mode': parts[28] if len(parts) > 28 and parts[28] not in ['N/A', '[N/A]', ''] else 'N/A',
+                        'encoder_utilization': float(parts[29]) if len(parts) > 29 and parts[29] not in ['N/A', '[N/A]', ''] else 0,
+                        'decoder_utilization': float(parts[30]) if len(parts) > 30 and parts[30] not in ['N/A', '[N/A]', ''] else 0,
                         'throttle_reasons': 'None',
                         'timestamp': datetime.now().isoformat(),
                         '_fallback_mode': True
@@ -146,9 +149,11 @@ def parse_nvidia_smi_fallback():
                         'encoder_sessions': 0,
                         'encoder_fps': 0,
                         'encoder_latency': 0,
+                        'encoder_utilization': 0,
                         'decoder_sessions': 0,
                         'decoder_fps': 0,
                         'decoder_latency': 0,
+                        'decoder_utilization': 0,
                         'performance_state': parts[13] if parts[13] not in ['N/A', '[N/A]', ''] else 'N/A',
                         'compute_mode': 'N/A',
                         'throttle_reasons': 'None',

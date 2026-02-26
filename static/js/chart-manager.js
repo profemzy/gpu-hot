@@ -49,6 +49,11 @@ function initGPUData(gpuId, initialValues = {}) {
             dataSM: fill(initialValues.appclockSM || 0),
             dataVideo: fill(initialValues.appclockVideo || 0)
         },
+        encoderDecoder: {
+            labels: [...labels],
+            dataEnc: fill(0),
+            dataDec: fill(0)
+        },
         // System metrics (per-GPU, tied to the node this GPU runs on)
         systemCpu: { labels: [...labels], data: fill(0) },
         systemMemory: { labels: [...labels], data: fill(0) },
@@ -114,6 +119,15 @@ function updatePCIeChartStats(gpuId, statsRX, statsTX) {
     if (txCurEl) txCurEl.textContent = fmtBw(statsTX.current);
 }
 
+// Update Encoder/Decoder stats (Enc/Dec)
+function updateEncDecChartStats(gpuId, statsEnc, statsDec) {
+    const encCurEl = document.getElementById(`stat-encDec-enc-current-${gpuId}`);
+    const decCurEl = document.getElementById(`stat-encDec-dec-current-${gpuId}`);
+
+    if (encCurEl) encCurEl.textContent = `${Math.round(statsEnc.current)}%`;
+    if (decCurEl) decCurEl.textContent = `${Math.round(statsDec.current)}%`;
+}
+
 // Update chart data
 function updateChart(gpuId, chartType, value, value2, value3, value4) {
     if (!gpuId || !chartType) return;
@@ -142,6 +156,9 @@ function updateChart(gpuId, chartType, value, value2, value3, value4) {
         data.dataMem.push(safe(value2));
         data.dataSM.push(safe(value3));
         data.dataVideo.push(safe(value4));
+    } else if (chartType === 'encoderDecoder') {
+        data.dataEnc.push(safe(value));
+        data.dataDec.push(safe(value2));
     } else {
         data.data.push(safe(value));
     }
@@ -159,6 +176,8 @@ function updateChart(gpuId, chartType, value, value2, value3, value4) {
         if (data.dataMem) data.dataMem.shift();
         if (data.dataSM) data.dataSM.shift();
         if (data.dataVideo) data.dataVideo.shift();
+        if (data.dataEnc) data.dataEnc.shift();
+        if (data.dataDec) data.dataDec.shift();
     }
 
     // Stats
@@ -166,6 +185,10 @@ function updateChart(gpuId, chartType, value, value2, value3, value4) {
         const statsRX = calculateStats(data.dataRX);
         const statsTX = calculateStats(data.dataTX);
         updatePCIeChartStats(gpuId, statsRX, statsTX);
+    } else if (chartType === 'encoderDecoder') {
+        const statsEnc = calculateStats(data.dataEnc);
+        const statsDec = calculateStats(data.dataDec);
+        updateEncDecChartStats(gpuId, statsEnc, statsDec);
     } else {
         let statsData = data.data;
         if (chartType === 'clocks') statsData = data.graphicsData;
@@ -196,7 +219,7 @@ function initGPUCharts(gpuId) {
     if (!gpuId) return;
 
     const chartTypes = [
-        'utilization', 'temperature', 'memory', 'power', 'fanSpeed', 'clocks', 'efficiency', 'pcie', 'appclocks',
+        'utilization', 'temperature', 'memory', 'power', 'fanSpeed', 'clocks', 'efficiency', 'pcie', 'appclocks', 'encoderDecoder',
         'systemCpu', 'systemMemory', 'systemSwap', 'systemNetIo', 'systemDiskIo', 'systemLoadAvg'
     ];
     if (!charts[gpuId]) charts[gpuId] = {};
@@ -206,7 +229,7 @@ function initGPUCharts(gpuId) {
         if (!canvas) return;
 
         if (charts[gpuId][type]) {
-            try { charts[gpuId][type].destroy(); } catch (e) {}
+            try { charts[gpuId][type].destroy(); } catch (e) { }
         }
 
         const config = JSON.parse(JSON.stringify(chartConfigs[type]));
@@ -240,6 +263,9 @@ function initGPUCharts(gpuId) {
             if (config.data.datasets[1]) config.data.datasets[1].data = typeData.dataMem;
             if (config.data.datasets[2]) config.data.datasets[2].data = typeData.dataSM;
             if (config.data.datasets[3]) config.data.datasets[3].data = typeData.dataVideo;
+        } else if (type === 'encoderDecoder') {
+            config.data.datasets[0].data = typeData.dataEnc;
+            if (config.data.datasets[1]) config.data.datasets[1].data = typeData.dataDec;
         } else if (type === 'systemNetIo') {
             config.data.datasets[0].data = typeData.dataRX;
             if (config.data.datasets[1]) config.data.datasets[1].data = typeData.dataTX;
@@ -292,7 +318,7 @@ function initOverviewMiniChart(gpuId, currentValue) {
     if (!canvas) return;
 
     if (charts[gpuId] && charts[gpuId].overviewMini) {
-        try { charts[gpuId].overviewMini.destroy(); } catch (e) {}
+        try { charts[gpuId].overviewMini.destroy(); } catch (e) { }
     }
 
     if (!chartData[gpuId]) {
@@ -573,7 +599,7 @@ function updateGPUSystemCharts(gpuId, systemInfo, sourceKey, shouldUpdateDOM) {
     const sysTypes = ['systemCpu', 'systemMemory', 'systemSwap', 'systemNetIo', 'systemDiskIo', 'systemLoadAvg'];
     sysTypes.forEach(t => {
         if (charts[gpuId] && charts[gpuId][t]) {
-            try { charts[gpuId][t].update('none'); } catch (e) {}
+            try { charts[gpuId][t].update('none'); } catch (e) { }
         }
     });
 

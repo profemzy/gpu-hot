@@ -92,6 +92,7 @@ const METRIC_FILL_COLORS = {
     efficiency: '168, 216, 185',
     pcie: '176, 190, 210',
     appclocks: '255, 213, 130',
+    encoderDecoder: '0, 210, 190',
     systemCpu: '255, 255, 255',
     systemMemory: '255, 255, 255',
     systemSwap: '255, 255, 255',
@@ -309,6 +310,18 @@ const chartConfigs = {
         yUnit: ' MHz',
         tooltipTitle: 'App Clocks',
         showLegend: true,
+        decimals: 0
+    }),
+
+    encoderDecoder: createMultiLineChartConfig({
+        datasets: [
+            { label: 'Encoder' },
+            { label: 'Decoder' }
+        ],
+        yUnit: '%',
+        tooltipTitle: 'Encoder / Decoder Utilization',
+        showLegend: true,
+        ySuggestedMax: 100,
         decimals: 0
     }),
 
