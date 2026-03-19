@@ -94,6 +94,28 @@
 }
 
 /* ============================================
+   Aggregate VRAM Row
+   ============================================ */
+
+.agg-vram-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-lg);
+    padding: var(--space-sm) 0 var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: var(--space-md);
+}
+
+.agg-vram-value {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.3px;
+}
+
+/* ============================================
    Enhanced Overview Card
    ============================================ */
 

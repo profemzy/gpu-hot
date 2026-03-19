@@ -42,6 +42,16 @@ function bulletClass(value, warnThreshold, dangerThreshold) {
     return '';
 }
 
+// Aggregate VRAM summary card (shown when 2+ GPUs)
+function createAggregateCard() {
+    return `
+        <div class="agg-vram-row" id="aggregate-card">
+            <span class="node-label">Total VRAM</span>
+            <span class="agg-vram-value" id="agg-vram-value">0 / 0 GB</span>
+        </div>
+    `;
+}
+
 // Update overview card — delegates to enhanced updater
 function updateOverviewCard(gpuId, gpuInfo, shouldUpdateDOM = true) {
     updateEnhancedOverviewCard(gpuId, gpuInfo, shouldUpdateDOM);
@@ -198,7 +208,7 @@ function updateEnhancedOverviewCard(gpuId, gpuInfo, shouldUpdateDOM = true) {
     const powerPercent = (power_draw / power_limit) * 100;
 
     if (shouldUpdateDOM) {
-        // Hero metrics
+        // Hero metrics (single-node enhanced overview: sgo-* IDs)
         const utilEl = document.getElementById(`sgo-util-${gpuId}`);
         const tempEl = document.getElementById(`sgo-temp-${gpuId}`);
         const memEl = document.getElementById(`sgo-mem-${gpuId}`);
@@ -213,6 +223,17 @@ function updateEnhancedOverviewCard(gpuId, gpuInfo, shouldUpdateDOM = true) {
 
         const memUnitEl = document.getElementById(`sgo-mem-unit-${gpuId}`);
         if (memUnitEl) memUnitEl.textContent = formatMemoryUnit(memory_used);
+
+        // Cluster/hub overview cards (overview-* IDs)
+        const clUtilEl = document.getElementById(`overview-util-${gpuId}`);
+        const clTempEl = document.getElementById(`overview-temp-${gpuId}`);
+        const clMemEl = document.getElementById(`overview-mem-${gpuId}`);
+        const clPowerEl = document.getElementById(`overview-power-${gpuId}`);
+
+        if (clUtilEl) clUtilEl.textContent = `${utilization}%`;
+        if (clTempEl) clTempEl.textContent = `${temperature}°`;
+        if (clMemEl) clMemEl.textContent = `${Math.round(memPercent)}%`;
+        if (clPowerEl) clPowerEl.textContent = `${power_draw.toFixed(0)}W`;
 
         // Bullet bars
         const utilBar = document.getElementById(`sgo-util-bar-${gpuId}`);

@@ -132,6 +132,9 @@ function setupScrollDetection() {
 // Initialize scroll detection
 setupScrollDetection();
 
+// Track whether the aggregate summary card has been injected
+let aggregateCardInjected = false;
+
 // Performance: Batched rendering system using requestAnimationFrame
 // Batches all DOM updates into a single frame to minimize reflows/repaints
 let pendingUpdates = new Map(); // Queue of pending GPU/system updates
@@ -185,6 +188,7 @@ function handleSocketMessage(event) {
                 updateGPUSystemCharts(gpuId, data.system, '_local', false);
             }
         });
+        if (gpuCount >= 2) updateAggregateStats(data.gpus);
         return; // Exit early - zero DOM work during scroll = smooth 60 FPS
     }
 
@@ -241,6 +245,16 @@ function handleSocketMessage(event) {
         }
     });
 
+    // Aggregate summary card (2+ GPUs)
+    if (gpuCount >= 2) {
+        if (!aggregateCardInjected) {
+            overviewContainer.insertAdjacentHTML('afterbegin', createAggregateCard());
+            aggregateCardInjected = true;
+            initAggregateChart();
+        }
+        pendingUpdates.set('_aggregate', { gpus: data.gpus });
+    }
+
     // Queue system updates (processes/CPU/RAM) for batching
     if (!lastDOMUpdate.system || (now - lastDOMUpdate.system) >= DOM_UPDATE_INTERVAL) {
         pendingUpdates.set('_system', {
@@ -273,7 +287,10 @@ function processBatchedUpdates() {
 
     // Execute all queued updates in a single batch
     pendingUpdates.forEach((update, gpuId) => {
-        if (gpuId === '_system') {
+        if (gpuId === '_aggregate') {
+            updateAggregateStats(update.gpus);
+            return;
+        } else if (gpuId === '_system') {
             // System updates (CPU, RAM, processes)
             updateProcesses(update.processes);
             updateSystemInfo(update.system);
@@ -421,10 +438,12 @@ function handleClusterData(data) {
     // Skip DOM updates during scrolling
     if (isScrolling) {
         // Still update chart data for continuity
+        const allGpusFlat = {};
         Object.entries(data.nodes).forEach(([nodeName, nodeData]) => {
             if (nodeData.status === 'online') {
                 Object.entries(nodeData.gpus).forEach(([gpuId, gpuInfo]) => {
                     const fullGpuId = `${nodeName}-${gpuId}`;
+                    allGpusFlat[fullGpuId] = gpuInfo;
                     if (!chartData[fullGpuId]) {
                         initGPUData(fullGpuId, {
                             utilization: gpuInfo.utilization,
@@ -439,13 +458,13 @@ function handleClusterData(data) {
                         });
                     }
                     updateAllChartDataOnly(fullGpuId, gpuInfo);
-                    // Also update system chart data during scroll (per-node)
                     if (nodeData.system) {
                         updateGPUSystemCharts(fullGpuId, nodeData.system, nodeName, false);
                     }
                 });
             }
         });
+        if (Object.keys(allGpusFlat).length >= 2) updateAggregateStats(allGpusFlat);
         return;
     }
 
@@ -524,6 +543,25 @@ function handleClusterData(data) {
             nodeGroup.remove();
         }
     });
+
+    // Aggregate summary card (2+ GPUs across cluster)
+    const clusterGpusFlat = {};
+    Object.entries(data.nodes).forEach(([nodeName, nodeData]) => {
+        if (nodeData.status === 'online') {
+            Object.entries(nodeData.gpus).forEach(([gpuId, gpuInfo]) => {
+                clusterGpusFlat[`${nodeName}-${gpuId}`] = gpuInfo;
+            });
+        }
+    });
+    const clusterGpuCount = Object.keys(clusterGpusFlat).length;
+    if (clusterGpuCount >= 2) {
+        if (!aggregateCardInjected) {
+            overviewContainer.insertAdjacentHTML('afterbegin', createAggregateCard());
+            aggregateCardInjected = true;
+            initAggregateChart();
+        }
+        pendingUpdates.set('_aggregate', { gpus: clusterGpusFlat });
+    }
 
     // Update processes and system info (use first online node)
     const firstOnlineNode = Object.values(data.nodes).find(n => n.status === 'online');

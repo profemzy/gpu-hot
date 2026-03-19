@@ -377,6 +377,29 @@ function initOverviewMiniChart(gpuId, currentValue) {
 }
 
 // ============================================
+// Aggregate Stats — Summary across all GPUs
+// ============================================
+
+function initAggregateChart() { }
+
+function updateAggregateStats(gpusMap) {
+    let totalUsedMiB = 0, totalCapMiB = 0;
+
+    Object.values(gpusMap).forEach(gpu => {
+        totalUsedMiB += gpu.memory_used || 0;
+        totalCapMiB += gpu.memory_total || 0;
+    });
+
+    const usedGB = totalUsedMiB / 1024;
+    const totalGB = totalCapMiB / 1024;
+
+    const el = document.getElementById('agg-vram-value');
+    if (el) el.textContent = `${usedGB.toFixed(1)} / ${totalGB.toFixed(1)} GB`;
+}
+
+function destroyAggregateChart() { }
+
+// ============================================
 // System Charts — Sidebar (mini) + Per-GPU (sparklines)
 // ============================================
 
