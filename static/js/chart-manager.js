@@ -395,6 +395,12 @@ function updateAggregateStats(gpusMap) {
 
     const el = document.getElementById('agg-vram-value');
     if (el) el.textContent = `${usedGB.toFixed(1)} / ${totalGB.toFixed(1)} GB`;
+
+    const bar = document.getElementById('agg-vram-bar');
+    if (bar) {
+        const pct = totalGB > 0 ? Math.min((usedGB / totalGB) * 100, 100) : 0;
+        bar.style.width = `${pct}%`;
+    }
 }
 
 function destroyAggregateChart() { }

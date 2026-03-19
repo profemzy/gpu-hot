@@ -32,13 +32,15 @@ class MockGPUNode:
         # Initialize per-GPU state for realistic patterns
         self.gpu_states = []
         for gpu_id in range(gpu_count):
+            mem_total = random.choice([12288, 24576])
+            is_busy = random.random() < 0.4
             self.gpu_states.append({
                 'base_temp': random.randint(45, 55),
-                'is_busy': random.random() < 0.4,  # 40% of GPUs are busy
-                'job_start': time.time() - random.uniform(0, 300),  # Random job start time
-                'memory': random.choice([12288, 24576]),  # Mix of 3080 (12GB) and 3090 (24GB)
-                'allocated_memory': 0,
-                'clock_base': random.randint(1710, 1890),  # Stable boost clock
+                'is_busy': is_busy,
+                'job_start': time.time() - random.uniform(0, 300),
+                'memory': mem_total,
+                'allocated_memory': mem_total * random.uniform(0.6, 0.92) if is_busy else 0,
+                'clock_base': random.randint(1710, 1890),
             })
         
         self.start_time = time.time()
@@ -90,9 +92,9 @@ class MockGPUNode:
             
             # Memory: allocated at job start, stays constant during training
             if state['is_busy']:
-                mem_used = state['allocated_memory']
+                mem_used = state['allocated_memory'] + random.uniform(-20, 20)
             else:
-                mem_used = random.uniform(0, 100)  # Minimal idle usage
+                mem_used = random.uniform(200, 600)  # Driver/CUDA context overhead
             
             # Temperature: correlates with utilization, slow changes
             target_temp = state['base_temp'] + (util / 100) * 35

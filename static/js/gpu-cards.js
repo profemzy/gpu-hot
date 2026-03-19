@@ -45,9 +45,14 @@ function bulletClass(value, warnThreshold, dangerThreshold) {
 // Aggregate VRAM summary card (shown when 2+ GPUs)
 function createAggregateCard() {
     return `
-        <div class="agg-vram-row" id="aggregate-card">
-            <span class="node-label">Total VRAM</span>
-            <span class="agg-vram-value" id="agg-vram-value">0 / 0 GB</span>
+        <div id="aggregate-card" class="agg-vram-wrap">
+            <div class="agg-vram-inner">
+                <div class="agg-vram-row">
+                    <span class="node-label">Total VRAM</span>
+                    <span class="agg-vram-value" id="agg-vram-value">0 / 0 GB</span>
+                </div>
+                <div class="agg-vram-bar"><div class="agg-vram-bar-fill" id="agg-vram-bar"></div></div>
+            </div>
         </div>
     `;
 }
