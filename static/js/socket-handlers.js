@@ -158,6 +158,7 @@ function handleSocketMessage(event) {
     // Clear loading state
     if (overviewContainer.querySelector('.loading')) {
         overviewContainer.innerHTML = '';
+        aggregateCardInjected = false;
     }
 
     const gpuCount = Object.keys(data.gpus).length;
@@ -188,7 +189,6 @@ function handleSocketMessage(event) {
                 updateGPUSystemCharts(gpuId, data.system, '_local', false);
             }
         });
-        if (gpuCount >= 2) updateAggregateStats(data.gpus);
         return; // Exit early - zero DOM work during scroll = smooth 60 FPS
     }
 
@@ -253,6 +253,11 @@ function handleSocketMessage(event) {
             initAggregateChart();
         }
         pendingUpdates.set('_aggregate', { gpus: data.gpus });
+    } else if (aggregateCardInjected) {
+        const aggCard = document.getElementById('aggregate-card');
+        if (aggCard) aggCard.remove();
+        destroyAggregateChart();
+        aggregateCardInjected = false;
     }
 
     // Queue system updates (processes/CPU/RAM) for batching
@@ -433,17 +438,16 @@ function handleClusterData(data) {
     // Clear loading state
     if (overviewContainer.querySelector('.loading')) {
         overviewContainer.innerHTML = '';
+        aggregateCardInjected = false;
     }
 
     // Skip DOM updates during scrolling
     if (isScrolling) {
         // Still update chart data for continuity
-        const allGpusFlat = {};
         Object.entries(data.nodes).forEach(([nodeName, nodeData]) => {
             if (nodeData.status === 'online') {
                 Object.entries(nodeData.gpus).forEach(([gpuId, gpuInfo]) => {
                     const fullGpuId = `${nodeName}-${gpuId}`;
-                    allGpusFlat[fullGpuId] = gpuInfo;
                     if (!chartData[fullGpuId]) {
                         initGPUData(fullGpuId, {
                             utilization: gpuInfo.utilization,
@@ -464,7 +468,6 @@ function handleClusterData(data) {
                 });
             }
         });
-        if (Object.keys(allGpusFlat).length >= 2) updateAggregateStats(allGpusFlat);
         return;
     }
 
@@ -561,6 +564,11 @@ function handleClusterData(data) {
             initAggregateChart();
         }
         pendingUpdates.set('_aggregate', { gpus: clusterGpusFlat });
+    } else if (aggregateCardInjected) {
+        const aggCard = document.getElementById('aggregate-card');
+        if (aggCard) aggCard.remove();
+        destroyAggregateChart();
+        aggregateCardInjected = false;
     }
 
     // Update processes and system info (use first online node)
