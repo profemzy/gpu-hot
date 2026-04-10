@@ -1,73 +1,114 @@
-# GPU Hot - Load Testing (FastAPI + AsyncIO)
+# GPU Hot — tests
+
+This folder holds **unit tests** (Python + browser-style JS), **load-test / mock-cluster** tooling, and Docker definitions for both.
+
+---
+
+## Unit tests
+
+Backend logic is covered with **pytest** (`tests/unit/`). Frontend **static JS** (charts, UI, WebSocket helpers, `app.js`) is covered with **Vitest** + **jsdom** (`tests/frontend/`).
+
+| File | Role |
+|------|------|
+| `pytest.ini` | Pytest config (`testpaths = unit`, asyncio mode) |
+| `package.json` | Vitest + jsdom; scripts: `npm test`, `npm run test:watch` |
+| `vitest.config.js` | Vitest root = this directory; `frontend/setup.js` loads `static/js` under vm |
+| `Dockerfile.unittest` | Image: Python deps + Node, runs pytest then Vitest |
+| `docker-compose.unittest.yml` | Build/run the unittest image (context: repo root) |
+
+From the **repository root**, the usual entry point is:
+
+```bash
+./run_tests.sh
+```
+
+That builds and runs `docker compose -f tests/docker-compose.unittest.yml` (same as a manual `docker compose … build` / `run`).
+
+### Unit tests without Docker
+
+Requires Python with `pytest`, `pytest-asyncio`, `httpx` (see `requirements.txt` + extras used in `Dockerfile.unittest`), and Node 18+.
+
+```bash
+# Backend
+python -m pytest -c tests/pytest.ini
+
+# Frontend (from repo root)
+npm install --prefix tests
+npm test --prefix tests
+```
+
+To show **Vitest** `console.*` output from app code (hidden by default), run:
+
+```bash
+VITEST_SILENT=0 npm test --prefix tests
+```
+
+---
+
+## Load testing (mock cluster)
 
 Simple load testing for multi-node GPU monitoring with realistic async patterns.
 
-## Quick Start
+### Quick start
 
 ```bash
 cd tests
-docker-compose -f docker-compose.test.yml up
+docker compose -f docker-compose.test.yml up
 ```
 
 Open http://localhost:1312 to see the dashboard.
 
-## Architecture
+### Architecture
 
-- **FastAPI + AsyncIO**: Modern async Python for better performance
-- **Native WebSockets**: No Socket.IO overhead, direct WebSocket protocol
-- **Concurrent Mock Nodes**: Multiple nodes running in parallel
-- **Realistic GPU Patterns**: Training jobs with epochs, warmup, validation
+- **FastAPI + AsyncIO**: async Python for mock nodes
+- **Native WebSockets**: direct WebSocket protocol
+- **Concurrent mock nodes**: multiple nodes in parallel
+- **Realistic GPU patterns**: training-style utilization, warmup, validation
 
-## Load Test Presets
+### Load test presets
 
-Edit `docker-compose.test.yml` and uncomment the preset you want:
+Edit `docker-compose.test.yml` and uncomment the preset you want.
 
-### LIGHT (3 nodes, 14 GPUs)
-Good for development and quick testing.
+**LIGHT (3 nodes, 14 GPUs)** — development / quick runs:
+
 ```yaml
 - NODES=2,4,8
 - NODE_URLS=http://mock-cluster:13120,http://mock-cluster:13121,http://mock-cluster:13122
 ```
 
-### MEDIUM (8 nodes, 64 GPUs) ⭐ Default
-Realistic medium-sized cluster.
+**MEDIUM (8 nodes, 64 GPUs)** — default-style medium cluster:
+
 ```yaml
 - NODES=8,8,8,8,8,8,8,8
 - NODE_URLS=http://mock-cluster:13120,...,http://mock-cluster:13127
 ```
 
-### HEAVY (20 nodes, 160 GPUs)
-Stress test for large production environments.
+**HEAVY (20 nodes, 160 GPUs)** — stress / large cluster:
+
 ```yaml
 - NODES=8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
 - NODE_URLS=http://mock-cluster:13120,...,http://mock-cluster:13139
 ```
 
-## What's Simulated
+### What’s simulated
 
-- **Realistic GPU patterns**: Training jobs with epochs, warmup, validation
-- **Idle + busy GPUs**: ~40% utilization typical of real clusters
-- **Stable memory**: Memory allocated at job start, stays constant
-- **Clock speeds**: Proper P-states (P0/P2/P8)
-- **Data loading dips**: Periodic utilization drops
-- **Temperature correlation**: Realistic thermal behavior
+- Realistic GPU patterns (epochs, warmup, validation)
+- Idle + busy GPUs (~40% utilization typical of many clusters)
+- Stable memory, clock P-states, data-loading dips, temperature correlation
 
-## Files
+### Load-test files
 
-- `test_cluster.py` - Mock GPU node with realistic patterns (FastAPI + AsyncIO)
-- `docker-compose.test.yml` - Test stack with preset configurations
-- `Dockerfile.test` - Container for mock nodes (FastAPI dependencies)
+| File | Role |
+|------|------|
+| `test_cluster.py` | Mock GPU node (FastAPI + AsyncIO) |
+| `docker-compose.test.yml` | Stack + presets |
+| `Dockerfile.test` | Image for mock nodes |
 
-## Performance Benefits
-
-- **20-40% latency reduction** with true async/await
-- **2-3x more concurrent connections** supported
-- **Better resource utilization** for hub mode aggregation
-- **Sub-500ms latency** consistently achieved
-
-## Rebuild After Changes
+### Rebuild after changes
 
 ```bash
-docker-compose -f docker-compose.test.yml down
-docker-compose -f docker-compose.test.yml up --build
+docker compose -f docker-compose.test.yml down
+docker compose -f docker-compose.test.yml up --build
 ```
+
+(Run these from the `tests/` directory, or pass `-f tests/docker-compose.test.yml` from the repo root.)

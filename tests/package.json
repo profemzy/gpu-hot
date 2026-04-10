@@ -1,0 +1,12 @@
+{
+  "name": "gpu-hot-tests",
+  "private": true,
+  "scripts": {
+    "test": "VITE_CJS_IGNORE_WARNING=1 vitest run",
+    "test:watch": "VITE_CJS_IGNORE_WARNING=1 vitest"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0",
+    "jsdom": "^24.0.0"
+  }
+}
