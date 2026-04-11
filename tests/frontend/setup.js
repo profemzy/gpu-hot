@@ -25,7 +25,11 @@ class MockChart {
     update() {}
     destroy() {}
     resize() {}
+    getActiveElements() { return []; }
 }
+
+// Mock Chart.register for plugin registration
+MockChart.register = function() {};
 
 globalThis.Chart = MockChart;
 
@@ -55,6 +59,7 @@ HTMLCanvasElement.prototype.getContext = function getContext(type) {
 // ---------------------------------------------------------------------------
 
 const loadOrder = [
+    'theme.js',
     'chart-config.js',
     'chart-manager.js',
     'gpu-cards.js',
@@ -67,11 +72,14 @@ for (const file of loadOrder) {
     // Use vm.runInThisContext so `this` at the top level is globalThis
     const wrappedCode = `(function() { ${code}\n
         // Export all function declarations and variables to globalThis
+        if (typeof ThemeSystem !== 'undefined') globalThis.ThemeSystem = ThemeSystem;
         if (typeof SPARK !== 'undefined') globalThis.SPARK = SPARK;
         if (typeof SPARK_THRESHOLDS !== 'undefined') globalThis.SPARK_THRESHOLDS = SPARK_THRESHOLDS;
         if (typeof getBaseChartOptions !== 'undefined') globalThis.getBaseChartOptions = getBaseChartOptions;
         if (typeof createLineChartConfig !== 'undefined') globalThis.createLineChartConfig = createLineChartConfig;
         if (typeof createMultiLineChartConfig !== 'undefined') globalThis.createMultiLineChartConfig = createMultiLineChartConfig;
+        if (typeof createMetricGradient !== 'undefined') globalThis.createMetricGradient = createMetricGradient;
+        if (typeof crosshairPlugin !== 'undefined') globalThis.crosshairPlugin = crosshairPlugin;
         if (typeof chartConfigs !== 'undefined') globalThis.chartConfigs = chartConfigs;
         if (typeof charts !== 'undefined') globalThis.charts = charts;
         if (typeof chartData !== 'undefined') globalThis.chartData = chartData;
@@ -99,6 +107,10 @@ for (const file of loadOrder) {
         if (typeof removeGPUTab !== 'undefined') globalThis.removeGPUTab = removeGPUTab;
         if (typeof autoSwitchSingleGPU !== 'undefined') globalThis.autoSwitchSingleGPU = autoSwitchSingleGPU;
         if (typeof toggleProcesses !== 'undefined') globalThis.toggleProcesses = toggleProcesses;
+        if (typeof prefersReducedMotion !== 'undefined') globalThis.prefersReducedMotion = prefersReducedMotion;
+        if (typeof animateValue !== 'undefined') globalThis.animateValue = animateValue;
+        if (typeof animateMetrics !== 'undefined') globalThis.animateMetrics = animateMetrics;
+        if (typeof activeAnimations !== 'undefined') globalThis.activeAnimations = activeAnimations;
         if (typeof currentTab !== 'undefined') {
             Object.defineProperty(globalThis, 'currentTab', {
                 get() { return currentTab; },

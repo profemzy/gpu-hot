@@ -3,24 +3,56 @@
  * Initializes the application when the DOM is ready
  */
 
+// Register Chart.js plugins before any charts are created (if Chart.register exists)
+if (window.Chart && window.crosshairPlugin && typeof Chart.register === 'function') {
+    try {
+        Chart.register(window.crosshairPlugin);
+    } catch (e) {
+        // Plugin may already be registered or Chart.js version doesn't support it
+        console.debug('Crosshair plugin registration skipped:', e.message);
+    }
+}
+
 // Application initialization
 document.addEventListener('DOMContentLoaded', function() {
     console.log('GPU Hot application initialized');
-    
+
+    // Initialize theme system first (before charts)
+    initThemeSystem();
+
     // All functionality is loaded from other modules:
+    // - theme.js: Theme detection, toggle, persistence
     // - charts.js: Chart configurations and updates
     // - gpu-cards.js: GPU card rendering and updates
     // - ui.js: UI interactions and navigation
     // - socket-handlers.js: Real-time data updates via Socket.IO
-    
+
     // The socket connection is established automatically when socket-handlers.js loads
-    
+
     // Check for version updates
     checkVersion();
 
     // Initialize GitHub star prompt
     initStarPrompt();
 });
+
+/**
+ * Initialize theme system and bind toggle button
+ */
+function initThemeSystem() {
+    // Initialize theme detection and apply stored preference
+    if (window.ThemeSystem) {
+        window.ThemeSystem.init();
+        
+        // Bind toggle button click handler
+        const toggleBtn = document.getElementById('theme-toggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                window.ThemeSystem.toggle();
+            });
+        }
+    }
+}
 
 /**
  * Check current version and update availability

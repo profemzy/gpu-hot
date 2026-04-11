@@ -1,0 +1,334 @@
+/* ============================================
+   GPU Studio — Skeleton Loading States
+   Shimmer animation for loading placeholders
+   ============================================ */
+
+/* Skeleton base styles */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-card);
+    border-radius: 4px;
+}
+
+/* Shimmer animation */
+.skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        var(--hover-bg-subtle) 50%,
+        transparent 100%
+    );
+    animation: shimmer 1.5s linear infinite;
+    transform: translateX(-100%);
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .skeleton::after {
+        animation: none;
+        background: var(--hover-bg-subtle);
+    }
+}
+
+/* ============================================
+   Skeleton Card Components
+   ============================================ */
+
+/* Skeleton overview card */
+.skeleton-overview-card {
+    display: grid;
+    grid-template-columns: 180px 1fr 200px;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-sm) 0;
+}
+
+.skeleton-gpu-name {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.skeleton-gpu-name-title {
+    height: 20px;
+    width: 140px;
+}
+
+.skeleton-gpu-name-subtitle {
+    height: 14px;
+    width: 100px;
+}
+
+.skeleton-metrics {
+    display: flex;
+    gap: var(--space-xl);
+    flex-wrap: nowrap;
+}
+
+.skeleton-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 72px;
+}
+
+.skeleton-metric-value {
+    height: 24px;
+    width: 60px;
+}
+
+.skeleton-metric-label {
+    height: 12px;
+    width: 40px;
+}
+
+.skeleton-sparkline {
+    height: 48px;
+    width: 200px;
+}
+
+/* Skeleton aggregate summary row */
+.skeleton-aggregate {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-md) 0;
+}
+
+.skeleton-aggregate-row {
+    display: flex;
+    gap: var(--space-lg);
+    align-items: baseline;
+}
+
+.skeleton-aggregate-value {
+    height: 20px;
+    width: 120px;
+}
+
+.skeleton-aggregate-bar {
+    height: 3px;
+    width: 100%;
+    flex: 1;
+}
+
+/* Skeleton GPU detail card */
+.skeleton-detail-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.skeleton-detail-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.skeleton-detail-title {
+    height: 32px;
+    width: 80px;
+}
+
+.skeleton-detail-name {
+    height: 16px;
+    width: 180px;
+}
+
+.skeleton-detail-specs {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.skeleton-spec-tag {
+    height: 14px;
+    width: 80px;
+}
+
+.skeleton-metrics-panel {
+    background: var(--bg-panel);
+    border-radius: 8px;
+    padding: var(--space-md) var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.skeleton-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-lg);
+}
+
+.skeleton-metric-cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.skeleton-metric-num {
+    height: 40px;
+    width: 80px;
+}
+
+.skeleton-metric-unit {
+    height: 16px;
+    width: 30px;
+}
+
+.skeleton-metric-bar {
+    height: 4px;
+    width: 100%;
+}
+
+/* Skeleton sparkline section */
+.skeleton-sparklines-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+}
+
+.skeleton-sparkline-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.skeleton-sparkline-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.skeleton-sparkline-title {
+    height: 12px;
+    width: 80px;
+}
+
+.skeleton-sparkline-stats {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.skeleton-sparkline-stat {
+    height: 24px;
+    width: 50px;
+}
+
+.skeleton-sparkline-canvas {
+    height: 90px;
+    width: 100%;
+}
+
+/* Skeleton process table */
+.skeleton-processes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.skeleton-process-header {
+    display: grid;
+    grid-template-columns: 1fr 100px 100px;
+    gap: var(--space-md);
+    padding: var(--space-sm) 0;
+}
+
+.skeleton-process-row {
+    display: grid;
+    grid-template-columns: 1fr 100px 100px;
+    gap: var(--space-md);
+    padding: var(--space-sm) 0;
+}
+
+.skeleton-process-name {
+    height: 16px;
+    width: 200px;
+}
+
+.skeleton-process-pid {
+    height: 14px;
+    width: 60px;
+}
+
+.skeleton-process-memory {
+    height: 16px;
+    width: 60px;
+}
+
+/* ============================================
+   Responsive — Mobile Skeletons
+   ============================================ */
+
+@media (max-width: 1200px) {
+    .skeleton-overview-card {
+        grid-template-columns: 140px 1fr 160px;
+    }
+}
+
+@media (max-width: 768px) {
+    .skeleton-overview-card {
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+        padding: var(--space-md) 0;
+    }
+
+    .skeleton-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-md);
+    }
+
+    .skeleton-sparkline {
+        height: 40px;
+        width: 100%;
+    }
+
+    .skeleton-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .skeleton-metric-num {
+        height: 32px;
+    }
+
+    .skeleton-sparklines-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .skeleton-process-header,
+    .skeleton-process-row {
+        grid-template-columns: 1fr 80px 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .skeleton-metrics-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .skeleton-metric-num {
+        height: 26px;
+    }
+
+    .skeleton-process-header,
+    .skeleton-process-row {
+        grid-template-columns: 1fr 80px;
+    }
+
+    .skeleton-process-pid {
+        display: none;
+    }
+}

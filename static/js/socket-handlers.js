@@ -46,6 +46,9 @@ function handleSocketOpen() {
         const dot = document.getElementById('status-dot');
         if (dot) dot.classList.add('connected');
     }
+
+    // Show skeleton cards after WebSocket connects (before GPU data arrives)
+    showSkeletonCards();
 }
 
 function handleSocketClose() {
@@ -97,6 +100,135 @@ function attemptReconnect() {
 
 // Initialize connection
 connectWebSocket();
+
+// ============================================
+// Skeleton Loading State Management
+// ============================================
+
+/**
+ * Show skeleton cards after WebSocket connection
+ * Replaces "Waiting for GPU data…" with skeleton placeholders
+ */
+function showSkeletonCards() {
+    const overviewContainer = document.getElementById('overview-container');
+    const processesContainer = document.getElementById('processes-container');
+
+    // Skip if containers don't exist (test environment)
+    if (!overviewContainer) return;
+
+    // Only show skeletons if still in loading state
+    if (!overviewContainer.querySelector('.loading')) return;
+
+    // Replace overview loading with skeleton cards
+    overviewContainer.innerHTML = createSkeletonOverview();
+
+    // Replace processes loading with skeleton rows
+    if (processesContainer) {
+        processesContainer.innerHTML = createSkeletonProcesses();
+    }
+}
+
+/**
+ * Create skeleton overview cards (2 placeholder GPUs)
+ * @returns {string} HTML string with skeleton cards
+ */
+function createSkeletonOverview() {
+    return `
+        <div class="skeleton-aggregate">
+            <div class="skeleton-aggregate-row">
+                <div class="skeleton skeleton-aggregate-value"></div>
+                <div class="skeleton skeleton-aggregate-bar"></div>
+            </div>
+        </div>
+        <div class="skeleton-overview-card">
+            <div class="skeleton-gpu-name">
+                <div class="skeleton skeleton-gpu-name-title"></div>
+                <div class="skeleton skeleton-gpu-name-subtitle"></div>
+            </div>
+            <div class="skeleton-metrics">
+                <div class="skeleton-metric">
+                    <div class="skeleton skeleton-metric-value"></div>
+                    <div class="skeleton skeleton-metric-label"></div>
+                </div>
+                <div class="skeleton-metric">
+                    <div class="skeleton skeleton-metric-value"></div>
+                    <div class="skeleton skeleton-metric-label"></div>
+                </div>
+                <div class="skeleton-metric">
+                    <div class="skeleton skeleton-metric-value"></div>
+                    <div class="skeleton skeleton-metric-label"></div>
+                </div>
+                <div class="skeleton-metric">
+                    <div class="skeleton skeleton-metric-value"></div>
+                    <div class="skeleton skeleton-metric-label"></div>
+                </div>
+            </div>
+            <div class="skeleton skeleton-sparkline"></div>
+        </div>
+        <div class="skeleton-overview-card">
+            <div class="skeleton-gpu-name">
+                <div class="skeleton skeleton-gpu-name-title"></div>
+                <div class="skeleton skeleton-gpu-name-subtitle"></div>
+            </div>
+            <div class="skeleton-metrics">
+                <div class="skeleton-metric">
+                    <div class="skeleton skeleton-metric-value"></div>
+                    <div class="skeleton skeleton-metric-label"></div>
+                </div>
+                <div class="skeleton-metric">
+                    <div class="skeleton skeleton-metric-value"></div>
+                    <div class="skeleton skeleton-metric-label"></div>
+                </div>
+                <div class="skeleton-metric">
+                    <div class="skeleton skeleton-metric-value"></div>
+                    <div class="skeleton skeleton-metric-label"></div>
+                </div>
+                <div class="skeleton-metric">
+                    <div class="skeleton skeleton-metric-value"></div>
+                    <div class="skeleton skeleton-metric-label"></div>
+                </div>
+            </div>
+            <div class="skeleton skeleton-sparkline"></div>
+        </div>
+    `;
+}
+
+/**
+ * Create skeleton process rows
+ * @returns {string} HTML string with skeleton process table
+ */
+function createSkeletonProcesses() {
+    const rows = [];
+    for (let i = 0; i < 4; i++) {
+        rows.push(`
+            <div class="skeleton-process-row">
+                <div class="skeleton skeleton-process-name"></div>
+                <div class="skeleton skeleton-process-pid"></div>
+                <div class="skeleton skeleton-process-memory"></div>
+            </div>
+        `);
+    }
+    return `
+        <div class="skeleton-processes">
+            <div class="skeleton-process-header">
+                <div class="skeleton skeleton-process-name"></div>
+                <div class="skeleton skeleton-process-pid"></div>
+                <div class="skeleton skeleton-process-memory"></div>
+            </div>
+            ${rows.join('')}
+        </div>
+    `;
+}
+
+/**
+ * Hide skeleton cards when real data arrives
+ * Called from handleSocketMessage when first GPU data is received
+ */
+function hideSkeletonCards() {
+    const overviewContainer = document.getElementById('overview-container');
+    const skeletonCards = overviewContainer.querySelectorAll('.skeleton-overview-card, .skeleton-aggregate');
+    skeletonCards.forEach(card => card.remove());
+}
 
 // Performance: Scroll detection to pause DOM updates during scroll
 let isScrolling = false;
@@ -155,8 +287,9 @@ function handleSocketMessage(event) {
 
     const overviewContainer = document.getElementById('overview-container');
 
-    // Clear loading state
-    if (overviewContainer.querySelector('.loading')) {
+    // Clear loading state (both pulsing dot and skeleton cards)
+    if (overviewContainer.querySelector('.loading') || overviewContainer.querySelector('.skeleton-overview-card')) {
+        hideSkeletonCards();
         overviewContainer.innerHTML = '';
         aggregateCardInjected = false;
     }
@@ -449,8 +582,9 @@ function handleClusterData(data) {
     const overviewContainer = document.getElementById('overview-container');
     const now = Date.now();
 
-    // Clear loading state
-    if (overviewContainer.querySelector('.loading')) {
+    // Clear loading state (both pulsing dot and skeleton cards)
+    if (overviewContainer.querySelector('.loading') || overviewContainer.querySelector('.skeleton-overview-card')) {
+        hideSkeletonCards();
         overviewContainer.innerHTML = '';
         aggregateCardInjected = false;
     }
@@ -612,33 +746,53 @@ function createClusterGPUCard(nodeName, gpuId, gpuInfo) {
     const memory_used = getMetricValue(gpuInfo, 'memory_used', 0);
     const memory_total = getMetricValue(gpuInfo, 'memory_total', 1);
     const memPercent = (memory_used / memory_total) * 100;
+    const temperature = getMetricValue(gpuInfo, 'temperature', 0);
+    const tempStatus = getTempStatus(temperature);
+    const gpuName = getMetricValue(gpuInfo, 'name', 'Unknown GPU');
 
     return `
-        <div class="overview-gpu-card" data-gpu-id="${fullGpuId}" onclick="switchToView('gpu-${fullGpuId}')">
-            <div class="overview-gpu-name">
-                <h2>GPU ${gpuId}</h2>
-                <p>${getMetricValue(gpuInfo, 'name', 'Unknown GPU')}</p>
+        <div class="overview-gpu-card" data-gpu-id="${fullGpuId}" data-temp-status="${tempStatus}"
+            tabindex="0" role="button" aria-label="View details for GPU ${gpuId} on ${nodeName}: ${gpuName}"
+            onclick="switchToView('gpu-${fullGpuId}')"
+            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchToView('gpu-${fullGpuId}')}">
+            <div class="overview-sparkline-band">
+                <canvas id="overview-chart-${fullGpuId}" aria-hidden="true"></canvas>
             </div>
-            <div class="overview-metrics">
-                <div class="overview-metric">
-                    <div class="overview-metric-value" id="overview-util-${fullGpuId}">${getMetricValue(gpuInfo, 'utilization', 0)}%</div>
-                    <div class="overview-metric-label">UTIL</div>
+            <div class="overview-gpu-content">
+                <div class="overview-gpu-name">
+                    <h2>GPU ${gpuId}</h2>
+                    <p>${gpuName}</p>
                 </div>
-                <div class="overview-metric">
-                    <div class="overview-metric-value" id="overview-temp-${fullGpuId}">${getMetricValue(gpuInfo, 'temperature', 0)}°</div>
-                    <div class="overview-metric-label">TEMP</div>
+                <div class="overview-metrics">
+                    <div class="overview-metric">
+                        <div class="overview-metric-value" id="overview-util-${fullGpuId}">${getMetricValue(gpuInfo, 'utilization', 0)}%</div>
+                        <div class="overview-metric-label">
+                            <svg class="metric-icon" aria-hidden="true"><use href="#icon-speedometer"/></svg>
+                            UTIL
+                        </div>
+                    </div>
+                    <div class="overview-metric">
+                        <div class="overview-metric-value" id="overview-temp-${fullGpuId}">${temperature}°</div>
+                        <div class="overview-metric-label">
+                            <svg class="metric-icon" aria-hidden="true"><use href="#icon-thermometer"/></svg>
+                            TEMP
+                        </div>
+                    </div>
+                    <div class="overview-metric">
+                        <div class="overview-metric-value" id="overview-mem-${fullGpuId}">${Math.round(memPercent)}%</div>
+                        <div class="overview-metric-label">
+                            <svg class="metric-icon" aria-hidden="true"><use href="#icon-memory"/></svg>
+                            MEM
+                        </div>
+                    </div>
+                    <div class="overview-metric">
+                        <div class="overview-metric-value" id="overview-power-${fullGpuId}">${getMetricValue(gpuInfo, 'power_draw', 0).toFixed(0)}W</div>
+                        <div class="overview-metric-label">
+                            <svg class="metric-icon" aria-hidden="true"><use href="#icon-bolt"/></svg>
+                            POWER
+                        </div>
+                    </div>
                 </div>
-                <div class="overview-metric">
-                    <div class="overview-metric-value" id="overview-mem-${fullGpuId}">${Math.round(memPercent)}%</div>
-                    <div class="overview-metric-label">MEM</div>
-                </div>
-                <div class="overview-metric">
-                    <div class="overview-metric-value" id="overview-power-${fullGpuId}">${getMetricValue(gpuInfo, 'power_draw', 0).toFixed(0)}W</div>
-                    <div class="overview-metric-label">POWER</div>
-                </div>
-            </div>
-            <div class="overview-mini-chart">
-                <canvas id="overview-chart-${fullGpuId}"></canvas>
             </div>
         </div>
     `;

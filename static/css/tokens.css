@@ -67,6 +67,118 @@
 
     /* Accent glow (connected status) */
     --accent-glow: rgba(130, 200, 130, 0.6);
+
+    /* Focus ring for accessibility */
+    --focus-ring-color: var(--accent-text);
+    --focus-ring-offset: 2px;
+    --focus-ring-width: 2px;
+
+    /* Hover state colors (for both themes) */
+    --hover-bg: rgba(255, 255, 255, 0.04);
+    --hover-bg-subtle: rgba(255, 255, 255, 0.02);
+    --hover-bg-card: rgba(255, 255, 255, 0.03);
+
+    /* Card/container backgrounds */
+    --bg-card: rgba(255, 255, 255, 0.015);
+    --bg-panel: rgba(255, 255, 255, 0.015);
+
+    /* Overlay */
+    --overlay-bg: rgba(0, 0, 0, 0.6);
+
+    /* Zebra striping for tables */
+    --zebra-bg: rgba(255, 255, 255, 0.015);
+
+    /* Drawer companion chip colors */
+    --companion-chip-border: rgba(255, 255, 255, 0.08);
+    --companion-chip-hover-border: rgba(255, 255, 255, 0.15);
+    --companion-chip-active-bg: rgba(255, 170, 50, 0.12);
+    --companion-chip-active-border: rgba(255, 170, 50, 0.30);
+    --companion-chip-active-text: rgba(255, 170, 50, 0.85);
+
+    /* Section divider */
+    --divider-color: rgba(255, 255, 255, 0.06);
+
+    /* Secondary metric text */
+    --metric-secondary-text: rgba(255, 255, 255, 0.75);
+}
+
+/* ============================================
+   Light Theme
+   ============================================ */
+
+[data-theme="light"] {
+    /* Background — light warm gray */
+    --bg-primary: #f8f9fa;
+    --bg-surface: #e8eaef;
+    --bg-elevated: #dcdfe6;
+
+    /* Text — dark slate for contrast (WCAG AA compliant) */
+    --text-primary: #1a1d26;
+    --text-secondary: rgba(26, 29, 38, 0.72);
+    --text-tertiary: rgba(26, 29, 38, 0.50);
+
+    /* Accent — slightly darker steel blue for visibility on light bg */
+    --accent: rgba(80, 140, 255, 0.18);
+    --accent-text: #4a90e2;
+
+    /* Signal colors remain the same */
+    --warning: #d97706;
+    --danger: #dc2626;
+    --ok: rgba(26, 29, 38, 0.5);
+
+    /* Metric Identity Colors — slightly darker for visibility on light bg */
+    --metric-util: 70, 130, 220;
+    --metric-temp: 200, 140, 50;
+    --metric-mem: 60, 170, 210;
+    --metric-power: 80, 180, 130;
+    --metric-fan: 140, 110, 180;
+    --metric-clocks: 200, 170, 90;
+    --metric-efficiency: 120, 180, 140;
+    --metric-pcie: 130, 145, 165;
+
+    /* Sparkline — darker strokes for light bg */
+    --spark-stroke: rgba(26, 29, 38, 0.55);
+    --spark-stroke-secondary: rgba(26, 29, 38, 0.30);
+
+    /* Bullet bar — inverted */
+    --bar-track: rgba(0, 0, 0, 0.08);
+    --bar-fill: rgba(0, 0, 0, 0.25);
+    --bar-fill-warning: var(--warning);
+    --bar-fill-danger: var(--danger);
+
+    /* Borders — darker for visibility */
+    --border-subtle: rgba(0, 0, 0, 0.08);
+
+    /* Accent glow — slightly darker for light bg */
+    --accent-glow: rgba(80, 160, 80, 0.5);
+
+    /* Hover states — inverted */
+    --hover-bg: rgba(0, 0, 0, 0.04);
+    --hover-bg-subtle: rgba(0, 0, 0, 0.02);
+    --hover-bg-card: rgba(0, 0, 0, 0.03);
+
+    /* Card/container backgrounds */
+    --bg-card: rgba(0, 0, 0, 0.02);
+    --bg-panel: rgba(0, 0, 0, 0.02);
+
+    /* Overlay — lighter for light bg */
+    --overlay-bg: rgba(0, 0, 0, 0.4);
+
+    /* Zebra striping */
+    --zebra-bg: rgba(0, 0, 0, 0.02);
+
+    /* Drawer companion chip colors */
+    --companion-chip-border: rgba(0, 0, 0, 0.08);
+    --companion-chip-hover-border: rgba(0, 0, 0, 0.15);
+    --companion-chip-active-bg: rgba(200, 130, 40, 0.12);
+    --companion-chip-active-border: rgba(200, 130, 40, 0.35);
+    --companion-chip-active-text: rgba(200, 130, 40, 0.85);
+
+    /* Section divider */
+    --divider-color: rgba(0, 0, 0, 0.06);
+
+    /* Secondary metric text */
+    --metric-secondary-text: rgba(26, 29, 38, 0.70);
 }
 
 /* ============================================
@@ -115,12 +227,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bar-track);
     border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--bar-fill);
 }
 
 /* ============================================
@@ -130,4 +242,44 @@ body {
 ::selection {
     background: var(--accent);
     color: var(--text-primary);
+}
+
+/* ============================================
+   Reduced Motion — Accessibility
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Disable hover transforms */
+    .overview-gpu-card:hover,
+    .sidebar-btn:hover,
+    .sidebar-link:hover,
+    .single-gpu-overview:hover,
+    .drawer:hover {
+        transform: none !important;
+    }
+
+    /* Disable skeleton shimmer */
+    .skeleton {
+        animation: none !important;
+    }
+
+    /* Disable loading dot pulse */
+    .loading-dot {
+        animation: none !important;
+        opacity: 0.5;
+    }
+
+    /* Disable status dot pulse */
+    .status-dot.connecting {
+        animation: none !important;
+    }
 }

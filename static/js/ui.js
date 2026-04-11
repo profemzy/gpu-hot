@@ -137,4 +137,98 @@ function autoSwitchSingleGPU(gpuCount, gpuIds) {
     }
 }
 
+// ============================================
+// Animated Number Transitions
+// ============================================
+
+// Check if reduced motion is preferred
+function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+// Animation frame tracking for cleanup
+const activeAnimations = new Map();
+
+/**
+ * Animate a number value smoothly from current to target
+ * @param {HTMLElement} element - The element to update
+ * @param {number} targetValue - The target numeric value
+ * @param {number} duration - Animation duration in ms (default 300)
+ * @param {string} suffix - Optional suffix to append (e.g., '%', '°', 'W')
+ * @param {function} formatter - Optional formatter function
+ */
+function animateValue(element, targetValue, duration = 300, suffix = '', formatter = null) {
+    if (!element) return;
+
+    // Skip animation if reduced motion preferred
+    if (prefersReducedMotion()) {
+        const formatted = formatter ? formatter(targetValue) : targetValue;
+        element.textContent = formatted + suffix;
+        return;
+    }
+
+    // Cancel any existing animation on this element
+    const animId = element.dataset.animId;
+    if (animId && activeAnimations.has(animId)) {
+        cancelAnimationFrame(activeAnimations.get(animId));
+        activeAnimations.delete(animId);
+    }
+
+    // Parse current value
+    const currentText = element.textContent.replace(/[^\d.-]/g, '');
+    const currentValue = parseFloat(currentText) || 0;
+
+    // Skip if values are essentially the same
+    if (Math.abs(currentValue - targetValue) < 0.5) {
+        const formatted = formatter ? formatter(targetValue) : targetValue;
+        element.textContent = formatted + suffix;
+        return;
+    }
+
+    const startTime = performance.now();
+    const newAnimId = `anim-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    element.dataset.animId = newAnimId;
+
+    function tick(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Ease-out cubic for smooth deceleration
+        const eased = 1 - Math.pow(1 - progress, 3);
+
+        // Calculate interpolated value
+        const value = currentValue + (targetValue - currentValue) * eased;
+
+        // Apply formatting
+        const displayValue = formatter ? formatter(value) :
+            (Number.isInteger(targetValue) ? Math.round(value) : value.toFixed(1));
+
+        element.textContent = displayValue + suffix;
+
+        if (progress < 1) {
+            activeAnimations.set(newAnimId, requestAnimationFrame(tick));
+        } else {
+            activeAnimations.delete(newAnimId);
+            delete element.dataset.animId;
+        }
+    }
+
+    activeAnimations.set(newAnimId, requestAnimationFrame(tick));
+}
+
+/**
+ * Animate multiple metrics at once
+ * @param {Object} updates - Map of element IDs to {value, suffix, formatter}
+ * @param {number} duration - Animation duration in ms
+ */
+function animateMetrics(updates, duration = 300) {
+    Object.entries(updates).forEach(([id, config]) => {
+        const element = document.getElementById(id);
+        if (element) {
+            animateValue(element, config.value, duration, config.suffix || '', config.formatter || null);
+        }
+    });
+}
+
+// Expose to global scope
 window.switchToView = switchToView;

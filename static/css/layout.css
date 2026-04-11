@@ -92,12 +92,22 @@
 
 .sidebar-btn:hover {
     color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--hover-bg);
 }
 
 .sidebar-btn.active {
     color: var(--text-primary);
     background: var(--accent);
+}
+
+/* Focus ring for sidebar buttons */
+.sidebar-btn:focus {
+    outline: none;
+}
+
+.sidebar-btn:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
 }
 
 /* Sidebar bottom section (system info, links) */
@@ -147,7 +157,16 @@
 
 .sidebar-link:hover {
     color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--hover-bg);
+}
+
+.sidebar-link:focus {
+    outline: none;
+}
+
+.sidebar-link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
 }
 
 /* ============================================
@@ -366,6 +385,43 @@
         margin-left: 0;
         margin-bottom: 48px;
         padding: var(--space-lg) var(--space-md) var(--space-xl);
+    }
+
+    /* Horizontal scroll for overview cards on mobile */
+    .overview-grid {
+        display: flex;
+        flex-direction: row;
+        gap: var(--space-md);
+        overflow-x: auto;
+        overflow-y: visible;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: var(--space-sm);
+        scrollbar-width: thin;
+    }
+
+    .overview-grid::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .overview-grid::-webkit-scrollbar-thumb {
+        background: var(--border-subtle);
+        border-radius: 2px;
+    }
+
+    .overview-gpu-card {
+        flex: 0 0 280px;
+        min-width: 280px;
+        scroll-snap-align: start;
+    }
+
+    .node-group {
+        flex: 0 0 auto;
+        min-width: 280px;
+    }
+
+    .node-grid {
+        flex-direction: column;
     }
 }
 

@@ -293,14 +293,22 @@ function initGPUCharts(gpuId) {
             }
         }
 
+        // Create theme-aware gradient fill
         const ctx = canvas.getContext('2d');
         const rect = canvas.parentElement.getBoundingClientRect();
         const h = (rect.height > 0 ? rect.height : 90);
-        const gradient = ctx.createLinearGradient(0, 0, 0, h);
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.06)');
-        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
+        const gradient = createMetricGradient(ctx, h, type, 0.12, 0.0);
         config.data.datasets[0].backgroundColor = gradient;
         config.data.datasets[0].fill = true;
+
+        // Enable crosshair for detail charts
+        if (config.options && !config.options.crosshair) {
+            config.options.crosshair = {
+                enabled: true,
+                lineWidth: 1,
+                color: 'rgba(130, 177, 255, 0.25)'
+            };
+        }
 
         try {
             charts[gpuId][type] = new Chart(canvas, config);
@@ -325,13 +333,15 @@ function initOverviewMiniChart(gpuId, currentValue) {
         initGPUData(gpuId, { utilization: currentValue });
     }
 
+    const colors = getChartColors();
+    const metricColors = getMetricColors();
     const utilThreshold = SPARK_THRESHOLDS.utilization;
     const ctxMini = canvas.getContext('2d');
     const miniRect = canvas.parentElement.getBoundingClientRect();
-    const miniH = miniRect.height || 48;
+    const miniH = miniRect.height || 32;
     const miniGradient = ctxMini.createLinearGradient(0, 0, 0, miniH);
-    miniGradient.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
-    miniGradient.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
+    miniGradient.addColorStop(0, `rgba(${metricColors.utilization}, 0.12)`);
+    miniGradient.addColorStop(1, `rgba(${metricColors.utilization}, 0.0)`);
 
     const config = {
         type: 'line',
@@ -339,7 +349,7 @@ function initOverviewMiniChart(gpuId, currentValue) {
             labels: chartData[gpuId].utilization.labels,
             datasets: [{
                 data: chartData[gpuId].utilization.data,
-                borderColor: 'rgba(255, 255, 255, 0.5)',
+                borderColor: colors.stroke,
                 backgroundColor: miniGradient,
                 borderWidth: 1.5,
                 tension: 0.3,
@@ -348,7 +358,7 @@ function initOverviewMiniChart(gpuId, currentValue) {
                 segment: {
                     borderColor: (ctx) =>
                         (ctx.p0.parsed.y >= utilThreshold || ctx.p1.parsed.y >= utilThreshold)
-                            ? SPARK.warning : undefined
+                            ? colors.warning : undefined
                 }
             }]
         },
@@ -384,18 +394,52 @@ function initAggregateChart() { }
 
 function updateAggregateStats(gpusMap) {
     let totalUsedMiB = 0, totalCapMiB = 0;
+    let totalPower = 0, avgTemp = 0, tempCount = 0;
+    const gpuCount = Object.keys(gpusMap).length;
 
     Object.values(gpusMap).forEach(gpu => {
         totalUsedMiB += gpu.memory_used || 0;
         totalCapMiB += gpu.memory_total || 0;
+        totalPower += gpu.power_draw || 0;
+        if (gpu.temperature) {
+            avgTemp += gpu.temperature;
+            tempCount++;
+        }
     });
 
     const usedGB = totalUsedMiB / 1024;
     const totalGB = totalCapMiB / 1024;
+    avgTemp = tempCount > 0 ? Math.round(avgTemp / tempCount) : 0;
 
-    const el = document.getElementById('agg-vram-value');
-    if (el) el.textContent = `${usedGB.toFixed(1)} / ${totalGB.toFixed(1)} GB`;
+    // Update VRAM (compound value, no animation)
+    const vramEl = document.getElementById('agg-vram-value');
+    if (vramEl) vramEl.textContent = `${usedGB.toFixed(1)} / ${totalGB.toFixed(1)} GB`;
 
+    // Update GPU count (animated)
+    const countEl = document.getElementById('agg-gpu-count');
+    if (countEl && typeof animateValue === 'function') {
+        animateValue(countEl, gpuCount, 200, '');
+    } else if (countEl) {
+        countEl.textContent = gpuCount;
+    }
+
+    // Update total power (animated)
+    const powerEl = document.getElementById('agg-power-value');
+    if (powerEl && typeof animateValue === 'function') {
+        animateValue(powerEl, Math.round(totalPower), 250, 'W');
+    } else if (powerEl) {
+        powerEl.textContent = `${Math.round(totalPower)}W`;
+    }
+
+    // Update average temperature (animated)
+    const tempAvgEl = document.getElementById('agg-temp-avg');
+    if (tempAvgEl && typeof animateValue === 'function') {
+        animateValue(tempAvgEl, avgTemp, 250, '°C');
+    } else if (tempAvgEl) {
+        tempAvgEl.textContent = `${avgTemp}°C`;
+    }
+
+    // Legacy bar (fallback)
     const bar = document.getElementById('agg-vram-bar');
     if (bar) {
         const pct = totalGB > 0 ? Math.min((usedGB / totalGB) * 100, 100) : 0;
@@ -686,3 +730,102 @@ function updateGPUSystemCharts(gpuId, systemInfo, sourceKey, shouldUpdateDOM) {
         if (loadSec) loadSec.style.display = systemInfo.load_avg_1 !== undefined ? '' : 'none';
     }
 }
+
+// ============================================
+// Theme Refresh — Update all charts when theme changes
+// ============================================
+
+/**
+ * Refresh all charts with new theme colors
+ * Called when themechange event is dispatched
+ */
+function refreshAllChartsTheme() {
+    const colors = getChartColors();
+    const metricColors = getMetricColors();
+    
+    // Refresh all GPU charts
+    Object.keys(charts).forEach(gpuId => {
+        Object.keys(charts[gpuId]).forEach(chartType => {
+            const chart = charts[gpuId][chartType];
+            if (!chart) return;
+            
+            // Update line colors
+            if (chart.data.datasets) {
+                chart.data.datasets.forEach((dataset, i) => {
+                    // Update stroke colors based on chart type
+                    if (i === 0) {
+                        dataset.borderColor = colors.stroke;
+                    } else if (i === 1) {
+                        dataset.borderColor = colors.strokeLight;
+                    } else {
+                        dataset.borderColor = colors.strokeDim;
+                    }
+                    
+                    // Update gradient fill if present
+                    if (dataset.backgroundColor && typeof dataset.backgroundColor !== 'string') {
+                        const canvas = chart.canvas;
+                        if (canvas) {
+                            const ctx = canvas.getContext('2d');
+                            const rect = canvas.parentElement.getBoundingClientRect();
+                            const h = rect.height > 0 ? rect.height : 90;
+                            const gradient = ctx.createLinearGradient(0, 0, 0, h);
+                            
+                            // Get metric color for this chart type
+                            const metricRgb = metricColors[chartType] || metricColors.utilization;
+                            gradient.addColorStop(0, `rgba(${metricRgb}, 0.08)`);
+                            gradient.addColorStop(1, `rgba(${metricRgb}, 0.0)`);
+                            dataset.backgroundColor = gradient;
+                        }
+                    }
+                });
+            }
+            
+            // Update chart options colors
+            if (chart.options.scales && chart.options.scales.y) {
+                if (chart.options.scales.y.grid) {
+                    chart.options.scales.y.grid.color = colors.grid;
+                }
+                if (chart.options.scales.y.ticks) {
+                    chart.options.scales.y.ticks.color = colors.tick;
+                }
+            }
+            
+            if (chart.options.plugins) {
+                if (chart.options.plugins.tooltip) {
+                    chart.options.plugins.tooltip.backgroundColor = colors.tooltipBg;
+                    chart.options.plugins.tooltip.titleColor = colors.tooltipTitle;
+                    chart.options.plugins.tooltip.bodyColor = colors.tooltipBody;
+                }
+                if (chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+                    chart.options.plugins.legend.labels.color = colors.legendColor;
+                }
+            }
+            
+            // Trigger update
+            try {
+                chart.update('none');
+            } catch (e) {
+                console.error(`Chart theme refresh error ${chartType} GPU ${gpuId}:`, e);
+            }
+        });
+    });
+    
+    // Refresh sidebar system charts
+    Object.keys(systemCharts).forEach(key => {
+        const chart = systemCharts[key];
+        if (!chart) return;
+        
+        if (chart.data.datasets && chart.data.datasets[0]) {
+            chart.data.datasets[0].borderColor = colors.stroke;
+        }
+        
+        try {
+            chart.update('none');
+        } catch (e) {
+            console.error(`System chart theme refresh error ${key}:`, e);
+        }
+    });
+}
+
+// Listen for theme change events
+document.addEventListener('themechange', refreshAllChartsTheme);

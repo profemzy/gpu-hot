@@ -139,12 +139,14 @@ describe('bulletClass', () => {
 });
 
 describe('createAggregateCard', () => {
-    it('returns HTML with aggregate card structure', () => {
+    it('returns HTML with aggregate header structure', () => {
         const html = createAggregateCard();
-        expect(html).toContain('aggregate-card');
+        expect(html).toContain('aggregate-header');
         expect(html).toContain('Total VRAM');
         expect(html).toContain('agg-vram-value');
-        expect(html).toContain('agg-vram-bar');
+        expect(html).toContain('agg-gpu-count');
+        expect(html).toContain('agg-power-value');
+        expect(html).toContain('agg-temp-avg');
     });
 });
 

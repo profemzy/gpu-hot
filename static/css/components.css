@@ -5,23 +5,113 @@
    ============================================ */
 
 /* ============================================
-   Overview Card (All GPUs view)
+   Icon Styles
+   ============================================ */
+
+.metric-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--text-tertiary);
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.metric-icon-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* ============================================
+   Overview Card (All GPUs view) — Redesigned
    ============================================ */
 
 .overview-gpu-card {
-    display: grid;
-    grid-template-columns: 180px 1fr 200px;
-    align-items: center;
-    gap: var(--space-lg);
-    padding: var(--space-sm) 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 0;
     cursor: pointer;
-    transition: background var(--transition-fast), transform var(--transition-fast);
+    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     min-width: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Temperature-colored left border indicator */
+.overview-gpu-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--status-ok);
+    border-radius: 8px 0 0 8px;
+    transition: background 0.3s ease;
+}
+
+.overview-gpu-card[data-temp-status="warning"]::before {
+    background: var(--warning);
+}
+
+.overview-gpu-card[data-temp-status="danger"]::before {
+    background: var(--danger);
+}
+
+/* Green <65°C, Yellow 65-80°C, Red >80°C */
+:root {
+    --status-ok: rgba(80, 180, 130, 0.8);
+    --status-warning: var(--warning);
+    --status-danger: var(--danger);
+}
+
+[data-theme="light"] {
+    --status-ok: rgba(60, 160, 110, 0.9);
 }
 
 .overview-gpu-card:hover {
-    background: rgba(255, 255, 255, 0.03);
-    transform: translateX(2px);
+    background: var(--hover-bg-card);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--hover-bg-card), 0 2px 4px var(--hover-bg-subtle);
+}
+
+/* Focus ring for overview cards */
+.overview-gpu-card:focus {
+    outline: none;
+}
+
+.overview-gpu-card:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+    box-shadow: 0 4px 16px var(--hover-bg-card), 0 2px 8px var(--hover-bg-subtle);
+}
+
+/* Sparkline band at top */
+.overview-sparkline-band {
+    height: 32px;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.overview-sparkline-band canvas {
+    display: block !important;
+    width: 100% !important;
+    height: 32px !important;
+    max-height: 32px !important;
+}
+
+/* Card content below sparkline */
+.overview-gpu-content {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
 }
 
 .overview-gpu-name {
@@ -47,7 +137,7 @@
 
 .overview-metrics {
     display: flex;
-    gap: var(--space-xl);
+    gap: var(--space-lg);
     flex-wrap: nowrap;
     min-width: 0;
 }
@@ -56,12 +146,12 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    min-width: 72px;
+    min-width: 64px;
 }
 
 .overview-metric-value {
     font-family: var(--font-mono);
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--text-primary);
     font-variant-numeric: tabular-nums;
@@ -71,16 +161,20 @@
 }
 
 .overview-metric-label {
-    font-size: 10px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 9px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.6px;
     color: var(--text-tertiary);
 }
 
+/* Legacy layout support (for existing code) */
 .overview-mini-chart {
-    height: 48px;
-    max-height: 48px;
+    height: 32px;
+    max-height: 32px;
     position: relative;
     overflow: hidden;
     min-width: 0;
@@ -89,14 +183,69 @@
 .overview-mini-chart canvas {
     display: block !important;
     width: 100% !important;
-    height: 48px !important;
-    max-height: 48px !important;
+    height: 32px !important;
+    max-height: 32px !important;
 }
 
 /* ============================================
-   Aggregate VRAM Row
+   Aggregate Summary Header Bar
    ============================================ */
 
+.aggregate-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    margin-bottom: var(--space-lg);
+}
+
+.aggregate-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.aggregate-stat-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+}
+
+.aggregate-stat-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.aggregate-stat-value {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.aggregate-stat-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-tertiary);
+}
+
+.aggregate-stat-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-subtle);
+    margin: 0 var(--space-sm);
+}
+
+/* Legacy aggregate VRAM row (fallback) */
 .agg-vram-wrap {
     padding: var(--space-sm) 0 var(--space-md);
     border-bottom: 1px solid var(--border-subtle);
@@ -139,6 +288,39 @@
 }
 
 /* ============================================
+   Section Dividers with Icon Labels
+   ============================================ */
+
+.section-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin: var(--space-lg) 0 var(--space-md);
+    color: var(--text-tertiary);
+}
+
+.section-divider-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+}
+
+.section-divider-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-tertiary);
+}
+
+.section-divider-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+}
+
+/* ============================================
    Enhanced Overview Card
    ============================================ */
 
@@ -149,7 +331,7 @@
 }
 
 .single-gpu-overview:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--hover-bg-card);
     transform: translateX(2px);
 }
 
@@ -257,7 +439,7 @@
 /* ---- Metrics Panel — subtle grouping container ---- */
 
 .metrics-panel {
-    background: rgba(255, 255, 255, 0.015);
+    background: var(--bg-panel);
     border-radius: 8px;
     padding: var(--space-md) var(--space-lg);
     margin-bottom: var(--space-lg);
@@ -306,7 +488,7 @@
     font-size: 18px;
     font-weight: 600;
     letter-spacing: -0.5px;
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--metric-secondary-text);
 }
 
 .metrics-grid--secondary .metric-unit {
@@ -597,11 +779,11 @@
 }
 
 .process-item:nth-child(even) {
-    background: rgba(255, 255, 255, 0.015);
+    background: var(--zebra-bg);
 }
 
 .process-item:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--hover-bg);
 }
 
 .process-item:last-child {
@@ -704,7 +886,7 @@
 .system-sparklines-section {
     margin-top: var(--space-xl);
     padding-top: var(--space-lg);
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid var(--divider-color);
 }
 
 .system-sparklines-label {
@@ -859,7 +1041,7 @@
 .drawer-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--overlay-bg);
     z-index: 200;
     opacity: 0;
     pointer-events: none;
@@ -892,7 +1074,7 @@
     display: none;
     width: 32px;
     height: 4px;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--text-tertiary);
     border-radius: 2px;
     margin: var(--space-sm) auto 0;
     flex-shrink: 0;
@@ -980,7 +1162,7 @@
     position: relative;
     margin-bottom: var(--space-md);
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.015);
+    background: var(--bg-panel);
     border-radius: 6px;
     padding: var(--space-sm);
 }
@@ -1027,13 +1209,13 @@
 
 .drawer-companion-chip:hover {
     color: var(--text-secondary);
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: var(--companion-chip-hover-border);
 }
 
 .drawer-companion-chip.active {
-    color: rgba(255, 170, 50, 0.80);
-    background: rgba(255, 170, 50, 0.12);
-    border-color: rgba(255, 170, 50, 0.35);
+    color: var(--companion-chip-active-text);
+    background: var(--companion-chip-active-bg);
+    border-color: var(--companion-chip-active-border);
 }
 
 /* Dual-metric stats bar */
@@ -1062,7 +1244,8 @@
 }
 
 .drawer-stats-group.companion .drawer-stats-group-label {
-    color: rgba(255, 170, 50, 0.50);
+    color: var(--companion-chip-active-text);
+    opacity: 0.6;
 }
 
 .drawer-stats-row {
@@ -1102,7 +1285,8 @@
 }
 
 .drawer-stats-group.companion .drawer-stat-value {
-    color: rgba(255, 170, 50, 0.65);
+    color: var(--companion-chip-active-text);
+    opacity: 0.75;
 }
 
 /* Make sparklines clickable */
@@ -1111,7 +1295,7 @@
 }
 
 .sparkline-container[data-chart-type]:hover {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--hover-bg-subtle);
     border-radius: 4px;
 }
 
@@ -1128,12 +1312,16 @@
    ============================================ */
 
 @media (max-width: 1200px) {
-    .overview-gpu-card {
-        grid-template-columns: 140px 1fr 160px;
+    .overview-gpu-content {
+        grid-template-columns: 140px 1fr;
     }
 
     .sparklines-grid {
         grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    }
+
+    .aggregate-header {
+        gap: var(--space-md);
     }
 }
 
@@ -1166,10 +1354,21 @@
         gap: var(--space-md);
     }
 
-    .overview-gpu-card {
-        grid-template-columns: 1fr;
+    /* New card responsive */
+    .overview-sparkline-band {
+        height: 28px;
+    }
+
+    .overview-sparkline-band canvas {
+        height: 28px !important;
+        max-height: 28px !important;
+    }
+
+    .overview-gpu-content {
+        display: flex;
+        flex-direction: column;
         gap: var(--space-md);
-        padding: var(--space-md) 0;
+        padding: var(--space-md);
     }
 
     .overview-metrics {
@@ -1178,8 +1377,23 @@
         gap: var(--space-md);
     }
 
+    .overview-metric-value {
+        font-size: 16px;
+    }
+
+    /* Aggregate header responsive */
+    .aggregate-header {
+        gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-md);
+    }
+
+    .aggregate-stat-divider {
+        display: none;
+    }
+
+    /* Legacy fallback */
     .overview-mini-chart {
-        height: 40px;
+        height: 28px;
     }
 
     .metrics-grid,

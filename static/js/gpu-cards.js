@@ -42,19 +42,50 @@ function bulletClass(value, warnThreshold, dangerThreshold) {
     return '';
 }
 
-// Aggregate VRAM summary card (shown when 2+ GPUs)
+// Aggregate VRAM summary card (shown when 2+ GPUs) — New header bar design
 function createAggregateCard() {
     return `
-        <div id="aggregate-card" class="agg-vram-wrap">
-            <div class="agg-vram-inner">
-                <div class="agg-vram-row">
-                    <span class="node-label">Total VRAM</span>
-                    <span class="agg-vram-value" id="agg-vram-value">0 / 0 GB</span>
+        <div id="aggregate-card" class="aggregate-header">
+            <div class="aggregate-stat">
+                <svg class="aggregate-stat-icon"><use href="#icon-memory"/></svg>
+                <div class="aggregate-stat-content">
+                    <span class="aggregate-stat-value" id="agg-vram-value">0 / 0 GB</span>
+                    <span class="aggregate-stat-label">Total VRAM</span>
                 </div>
-                <div class="agg-vram-bar"><div class="agg-vram-bar-fill" id="agg-vram-bar"></div></div>
+            </div>
+            <div class="aggregate-stat-divider"></div>
+            <div class="aggregate-stat">
+                <svg class="aggregate-stat-icon"><use href="#icon-gpu"/></svg>
+                <div class="aggregate-stat-content">
+                    <span class="aggregate-stat-value" id="agg-gpu-count">0</span>
+                    <span class="aggregate-stat-label">GPUs Online</span>
+                </div>
+            </div>
+            <div class="aggregate-stat-divider"></div>
+            <div class="aggregate-stat">
+                <svg class="aggregate-stat-icon"><use href="#icon-bolt"/></svg>
+                <div class="aggregate-stat-content">
+                    <span class="aggregate-stat-value" id="agg-power-value">0W</span>
+                    <span class="aggregate-stat-label">Total Power</span>
+                </div>
+            </div>
+            <div class="aggregate-stat-divider"></div>
+            <div class="aggregate-stat">
+                <svg class="aggregate-stat-icon"><use href="#icon-thermometer"/></svg>
+                <div class="aggregate-stat-content">
+                    <span class="aggregate-stat-value" id="agg-temp-avg">0°C</span>
+                    <span class="aggregate-stat-label">Avg Temp</span>
+                </div>
             </div>
         </div>
     `;
+}
+
+// Helper: get temperature status for card border
+function getTempStatus(temp) {
+    if (temp >= 80) return 'danger';
+    if (temp >= 65) return 'warning';
+    return '';
 }
 
 // Update overview card — delegates to enhanced updater
@@ -63,40 +94,60 @@ function updateOverviewCard(gpuId, gpuInfo, shouldUpdateDOM = true) {
 }
 
 // ============================================
-// Compact GPU Overview Card (multi-GPU single-server)
+// Compact GPU Overview Card (multi-GPU single-server) — Redesigned
 // ============================================
 
 function createCompactOverviewCard(gpuId, gpuInfo) {
     const memory_used = getMetricValue(gpuInfo, 'memory_used', 0);
     const memory_total = getMetricValue(gpuInfo, 'memory_total', 1);
     const memPercent = (memory_used / memory_total) * 100;
+    const temperature = getMetricValue(gpuInfo, 'temperature', 0);
+    const tempStatus = getTempStatus(temperature);
+    const gpuName = getMetricValue(gpuInfo, 'name', 'Unknown GPU');
 
     return `
-        <div class="overview-gpu-card" data-gpu-id="${gpuId}" onclick="switchToView('gpu-${gpuId}')">
-            <div class="overview-gpu-name">
-                <h2>GPU ${gpuId}</h2>
-                <p>${getMetricValue(gpuInfo, 'name', 'Unknown GPU')}</p>
+        <div class="overview-gpu-card" data-gpu-id="${gpuId}" data-temp-status="${tempStatus}"
+            tabindex="0" role="button" aria-label="View details for GPU ${gpuId}: ${gpuName}"
+            onclick="switchToView('gpu-${gpuId}')"
+            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchToView('gpu-${gpuId}')}">
+            <div class="overview-sparkline-band">
+                <canvas id="overview-chart-${gpuId}" aria-hidden="true"></canvas>
             </div>
-            <div class="overview-metrics">
-                <div class="overview-metric">
-                    <div class="overview-metric-value" id="overview-util-${gpuId}">${getMetricValue(gpuInfo, 'utilization', 0)}%</div>
-                    <div class="overview-metric-label">UTIL</div>
+            <div class="overview-gpu-content">
+                <div class="overview-gpu-name">
+                    <h2>GPU ${gpuId}</h2>
+                    <p>${gpuName}</p>
                 </div>
-                <div class="overview-metric">
-                    <div class="overview-metric-value" id="overview-temp-${gpuId}">${getMetricValue(gpuInfo, 'temperature', 0)}°</div>
-                    <div class="overview-metric-label">TEMP</div>
+                <div class="overview-metrics">
+                    <div class="overview-metric">
+                        <div class="overview-metric-value" id="overview-util-${gpuId}">${getMetricValue(gpuInfo, 'utilization', 0)}%</div>
+                        <div class="overview-metric-label">
+                            <svg class="metric-icon" aria-hidden="true"><use href="#icon-speedometer"/></svg>
+                            UTIL
+                        </div>
+                    </div>
+                    <div class="overview-metric">
+                        <div class="overview-metric-value" id="overview-temp-${gpuId}">${temperature}°</div>
+                        <div class="overview-metric-label">
+                            <svg class="metric-icon" aria-hidden="true"><use href="#icon-thermometer"/></svg>
+                            TEMP
+                        </div>
+                    </div>
+                    <div class="overview-metric">
+                        <div class="overview-metric-value" id="overview-mem-${gpuId}">${Math.round(memPercent)}%</div>
+                        <div class="overview-metric-label">
+                            <svg class="metric-icon" aria-hidden="true"><use href="#icon-memory"/></svg>
+                            MEM
+                        </div>
+                    </div>
+                    <div class="overview-metric">
+                        <div class="overview-metric-value" id="overview-power-${gpuId}">${getMetricValue(gpuInfo, 'power_draw', 0).toFixed(0)}W</div>
+                        <div class="overview-metric-label">
+                            <svg class="metric-icon" aria-hidden="true"><use href="#icon-bolt"/></svg>
+                            POWER
+                        </div>
+                    </div>
                 </div>
-                <div class="overview-metric">
-                    <div class="overview-metric-value" id="overview-mem-${gpuId}">${Math.round(memPercent)}%</div>
-                    <div class="overview-metric-label">MEM</div>
-                </div>
-                <div class="overview-metric">
-                    <div class="overview-metric-value" id="overview-power-${gpuId}">${getMetricValue(gpuInfo, 'power_draw', 0).toFixed(0)}W</div>
-                    <div class="overview-metric-label">POWER</div>
-                </div>
-            </div>
-            <div class="overview-mini-chart">
-                <canvas id="overview-chart-${gpuId}"></canvas>
             </div>
         </div>`;
 }
@@ -179,6 +230,12 @@ function createEnhancedOverviewCard(gpuId, gpuInfo) {
                 </div>
             </div>
 
+            <div class="section-divider">
+                <svg class="section-divider-icon"><use href="#icon-speedometer"/></svg>
+                <span class="section-divider-label">Performance</span>
+                <div class="section-divider-line"></div>
+            </div>
+
             <div class="sgo-metrics-row">
                 <div class="metrics-grid--primary sgo-metrics-grid">
                     <div class="metric-cell">
@@ -234,7 +291,13 @@ function createEnhancedOverviewCard(gpuId, gpuInfo) {
                 </div>
             </div>
 
-            ${secondaryItems ? `<div class="sgo-info-strip">${secondaryItems}</div>` : ''}
+            ${secondaryItems ? `
+            <div class="section-divider">
+                <svg class="section-divider-icon"><use href="#icon-chip"/></svg>
+                <span class="section-divider-label">Details</span>
+                <div class="section-divider-line"></div>
+            </div>
+            <div class="sgo-info-strip">${secondaryItems}</div>` : ''}
         </div>
     `;
 }
@@ -250,8 +313,13 @@ function updateEnhancedOverviewCard(gpuId, gpuInfo, shouldUpdateDOM = true) {
     const fan_speed = getMetricValue(gpuInfo, 'fan_speed', 0);
     const memPercent = (memory_used / memory_total) * 100;
     const powerPercent = (power_draw / power_limit) * 100;
+    const tempStatus = getTempStatus(temperature);
 
     if (shouldUpdateDOM) {
+        // Update temperature status on card
+        const cardEl = document.querySelector(`.overview-gpu-card[data-gpu-id="${gpuId}"]`);
+        if (cardEl) cardEl.setAttribute('data-temp-status', tempStatus);
+
         // Hero metrics (single-node enhanced overview: sgo-* IDs)
         const utilEl = document.getElementById(`sgo-util-${gpuId}`);
         const tempEl = document.getElementById(`sgo-temp-${gpuId}`);
@@ -268,16 +336,16 @@ function updateEnhancedOverviewCard(gpuId, gpuInfo, shouldUpdateDOM = true) {
         const memUnitEl = document.getElementById(`sgo-mem-unit-${gpuId}`);
         if (memUnitEl) memUnitEl.textContent = formatMemoryUnit(memory_used);
 
-        // Cluster/hub overview cards (overview-* IDs)
+        // Cluster/hub overview cards (overview-* IDs) — animated
         const clUtilEl = document.getElementById(`overview-util-${gpuId}`);
         const clTempEl = document.getElementById(`overview-temp-${gpuId}`);
         const clMemEl = document.getElementById(`overview-mem-${gpuId}`);
         const clPowerEl = document.getElementById(`overview-power-${gpuId}`);
 
-        if (clUtilEl) clUtilEl.textContent = `${utilization}%`;
-        if (clTempEl) clTempEl.textContent = `${temperature}°`;
-        if (clMemEl) clMemEl.textContent = `${Math.round(memPercent)}%`;
-        if (clPowerEl) clPowerEl.textContent = `${power_draw.toFixed(0)}W`;
+        if (clUtilEl) animateValue(clUtilEl, utilization, 250, '%');
+        if (clTempEl) animateValue(clTempEl, temperature, 250, '°');
+        if (clMemEl) animateValue(clMemEl, Math.round(memPercent), 250, '%');
+        if (clPowerEl) animateValue(clPowerEl, Math.round(power_draw), 250, 'W');
 
         // Bullet bars
         const utilBar = document.getElementById(`sgo-util-bar-${gpuId}`);

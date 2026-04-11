@@ -1,17 +1,114 @@
 /**
  * Chart configuration factory — GPU Studio
- * Grayscale sparklines, no fills, no color except alerts
+ * Theme-aware sparklines with gradient fills
  */
 
-// Sparkline palette — monochromatic
+/**
+ * Get chart colors from CSS custom properties
+ * Reads current theme colors from the DOM
+ * @returns {Object} Color palette for charts
+ */
+function getChartColors() {
+    const style = getComputedStyle(document.documentElement);
+    
+    return {
+        stroke: style.getPropertyValue('--spark-stroke').trim() || 'rgba(238, 240, 244, 0.6)',
+        strokeLight: style.getPropertyValue('--spark-stroke-secondary').trim() || 'rgba(238, 240, 244, 0.35)',
+        strokeDim: style.getPropertyValue('--spark-stroke-secondary').trim() || 'rgba(238, 240, 244, 0.2)',
+        grid: style.getPropertyValue('--bar-track').trim() || 'rgba(255, 255, 255, 0.04)',
+        tick: style.getPropertyValue('--text-tertiary').trim() || 'rgba(238, 240, 244, 0.4)',
+        tooltipBg: style.getPropertyValue('--bg-surface').trim() || '#171b22',
+        tooltipTitle: style.getPropertyValue('--text-primary').trim() || '#eef0f4',
+        tooltipBody: style.getPropertyValue('--text-secondary').trim() || 'rgba(238, 240, 244, 0.7)',
+        warning: style.getPropertyValue('--warning').trim() || '#f5a623',
+        legendColor: style.getPropertyValue('--text-tertiary').trim() || 'rgba(255, 255, 255, 0.5)',
+    };
+}
+
+/**
+ * Get metric identity RGB values from CSS custom properties
+ * @returns {Object} RGB tuples for each metric type
+ */
+function getMetricColors() {
+    const style = getComputedStyle(document.documentElement);
+
+    return {
+        utilization: style.getPropertyValue('--metric-util').trim() || '130, 177, 255',
+        temperature: style.getPropertyValue('--metric-temp').trim() || '255, 183, 77',
+        memory: style.getPropertyValue('--metric-mem').trim() || '100, 210, 255',
+        power: style.getPropertyValue('--metric-power').trim() || '134, 239, 172',
+        fanSpeed: style.getPropertyValue('--metric-fan').trim() || '186, 147, 216',
+        clocks: style.getPropertyValue('--metric-clocks').trim() || '255, 213, 130',
+        efficiency: style.getPropertyValue('--metric-efficiency').trim() || '168, 216, 185',
+        pcie: style.getPropertyValue('--metric-pcie').trim() || '176, 190, 210',
+        appclocks: style.getPropertyValue('--metric-clocks').trim() || '255, 213, 130',
+        encoderDecoder: '0, 210, 190',
+        systemCpu: style.getPropertyValue('--metric-util').trim() || '130, 177, 255',
+        systemMemory: style.getPropertyValue('--metric-mem').trim() || '100, 210, 255',
+        systemSwap: style.getPropertyValue('--metric-mem').trim() || '100, 210, 255',
+        systemNetIo: style.getPropertyValue('--metric-pcie').trim() || '176, 190, 210',
+        systemDiskIo: style.getPropertyValue('--metric-pcie').trim() || '176, 190, 210',
+        systemLoadAvg: style.getPropertyValue('--metric-util').trim() || '130, 177, 255',
+    };
+}
+
+/**
+ * Create a gradient fill for chart datasets
+ * @param {CanvasRenderingContext2D} ctx - Canvas context
+ * @param {number} height - Chart height for gradient calculation
+ * @param {string} metricType - Type of metric (utilization, temperature, etc.)
+ * @param {number} opacityTop - Opacity at top (default 0.15)
+ * @param {number} opacityBottom - Opacity at bottom (default 0.0)
+ * @returns {CanvasGradient} Gradient to use as backgroundColor
+ */
+function createMetricGradient(ctx, height, metricType, opacityTop = 0.15, opacityBottom = 0.0) {
+    const colors = getMetricColors();
+    const rgb = colors[metricType] || colors.utilization;
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, height || 100);
+    gradient.addColorStop(0, `rgba(${rgb}, ${opacityTop})`);
+    gradient.addColorStop(1, `rgba(${rgb}, ${opacityBottom})`);
+
+    return gradient;
+}
+
+/**
+ * Create a hover crosshair line for Chart.js charts
+ * Custom plugin that draws a vertical line at the hovered point
+ */
+const crosshairPlugin = {
+    id: 'crosshair',
+    afterDraw: (chart) => {
+        if (!chart.options.crosshair?.enabled) return;
+
+        const { ctx, chartArea, scales } = chart;
+        const active = chart.getActiveElements();
+
+        if (!active.length) return;
+
+        const point = active[0];
+        const x = point.element.x;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, chartArea.top);
+        ctx.lineTo(x, chartArea.bottom);
+        ctx.lineWidth = chart.options.crosshair.lineWidth || 1;
+        ctx.strokeStyle = chart.options.crosshair.color || 'rgba(130, 177, 255, 0.3)';
+        ctx.stroke();
+        ctx.restore();
+    }
+};
+
+// Legacy SPARK object for backwards compatibility (computed on first access)
 const SPARK = {
-    stroke: 'rgba(255, 255, 255, 0.6)',
-    strokeLight: 'rgba(255, 255, 255, 0.35)',
-    strokeDim: 'rgba(255, 255, 255, 0.2)',
-    grid: 'rgba(255, 255, 255, 0.04)',
-    tick: 'rgba(255, 255, 255, 0.4)',
-    tooltipBg: '#171b22',
-    warning: '#f5a623',
+    get stroke() { return getChartColors().stroke; },
+    get strokeLight() { return getChartColors().strokeLight; },
+    get strokeDim() { return getChartColors().strokeDim; },
+    get grid() { return getChartColors().grid; },
+    get tick() { return getChartColors().tick; },
+    get tooltipBg() { return getChartColors().tooltipBg; },
+    get warning() { return getChartColors().warning; },
 };
 
 // Sparkline warning thresholds — line turns orange above these values
@@ -23,6 +120,8 @@ const SPARK_THRESHOLDS = {
 
 // Base chart options — minimal sparkline
 function getBaseChartOptions() {
+    const colors = getChartColors();
+    
     return {
         responsive: true,
         maintainAspectRatio: false,
@@ -47,12 +146,12 @@ function getBaseChartOptions() {
                 display: true,
                 position: 'right',
                 grid: {
-                    color: SPARK.grid,
+                    color: colors.grid,
                     drawBorder: false,
                     lineWidth: 1
                 },
                 ticks: {
-                    color: SPARK.tick,
+                    color: colors.tick,
                     font: { size: 10, family: "'SF Mono', 'Menlo', 'Consolas', monospace" },
                     padding: 8,
                     maxTicksLimit: 3
@@ -67,9 +166,9 @@ function getBaseChartOptions() {
                 display: false
             },
             tooltip: {
-                backgroundColor: SPARK.tooltipBg,
-                titleColor: '#eef0f4',
-                bodyColor: 'rgba(238, 240, 244, 0.7)',
+                backgroundColor: colors.tooltipBg,
+                titleColor: colors.tooltipTitle,
+                bodyColor: colors.tooltipBody,
                 borderWidth: 0,
                 cornerRadius: 4,
                 displayColors: false,
@@ -81,24 +180,24 @@ function getBaseChartOptions() {
     };
 }
 
-// Metric identity RGB values for gradient fills
+// Metric identity RGB values for gradient fills (computed dynamically)
 const METRIC_FILL_COLORS = {
-    utilization: '130, 177, 255',
-    temperature: '255, 183, 77',
-    memory: '100, 210, 255',
-    power: '134, 239, 172',
-    fanSpeed: '186, 147, 216',
-    clocks: '255, 213, 130',
-    efficiency: '168, 216, 185',
-    pcie: '176, 190, 210',
-    appclocks: '255, 213, 130',
-    encoderDecoder: '0, 210, 190',
-    systemCpu: '255, 255, 255',
-    systemMemory: '255, 255, 255',
-    systemSwap: '255, 255, 255',
-    systemNetIo: '255, 255, 255',
-    systemDiskIo: '255, 255, 255',
-    systemLoadAvg: '255, 255, 255',
+    get utilization() { return getMetricColors().utilization; },
+    get temperature() { return getMetricColors().temperature; },
+    get memory() { return getMetricColors().memory; },
+    get power() { return getMetricColors().power; },
+    get fanSpeed() { return getMetricColors().fanSpeed; },
+    get clocks() { return getMetricColors().clocks; },
+    get efficiency() { return getMetricColors().efficiency; },
+    get pcie() { return getMetricColors().pcie; },
+    get appclocks() { return getMetricColors().appclocks; },
+    get encoderDecoder() { return getMetricColors().encoderDecoder; },
+    get systemCpu() { return getMetricColors().systemCpu; },
+    get systemMemory() { return getMetricColors().systemMemory; },
+    get systemSwap() { return getMetricColors().systemSwap; },
+    get systemNetIo() { return getMetricColors().systemNetIo; },
+    get systemDiskIo() { return getMetricColors().systemDiskIo; },
+    get systemLoadAvg() { return getMetricColors().systemLoadAvg; },
 };
 
 // Single-line sparkline config
@@ -164,8 +263,10 @@ function createMultiLineChartConfig(options) {
         decimals = 0
     } = options;
 
+    const colors = getChartColors();
+    
     // Grayscale tones for multi-line differentiation
-    const grayTones = [SPARK.stroke, SPARK.strokeLight, SPARK.strokeDim, 'rgba(255,255,255,0.1)'];
+    const grayTones = [colors.stroke, colors.strokeLight, colors.strokeDim, colors.strokeDim];
 
     const config = {
         type: 'line',
@@ -198,7 +299,7 @@ function createMultiLineChartConfig(options) {
         config.options.plugins.legend.position = 'top';
         config.options.plugins.legend.align = 'end';
         config.options.plugins.legend.labels = {
-            color: 'rgba(255, 255, 255, 0.5)',
+            color: colors.legendColor,
             font: { size: 10 },
             boxWidth: 8,
             boxHeight: 2,
