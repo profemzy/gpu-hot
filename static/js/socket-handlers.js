@@ -226,10 +226,23 @@ function handleSocketMessage(event) {
         // Handle initial card creation (can't be batched since we need the DOM element)
         const existingOverview = overviewContainer.querySelector(`[data-gpu-id="${gpuId}"]`);
         if (!existingOverview) {
-            overviewContainer.insertAdjacentHTML('beforeend', createEnhancedOverviewCard(gpuId, gpuInfo));
-            initOverviewMiniChart(gpuId, gpuInfo.utilization);
-            // Auto-expand processes for single GPU
-            if (gpuCount === 1) {
+            if (gpuCount >= 2) {
+                // Compact layout for multi-GPU servers
+                let nodeGrid = overviewContainer.querySelector('.node-grid');
+                if (!nodeGrid) {
+                    const hostname = data.node_name || 'GPU Server';
+                    overviewContainer.insertAdjacentHTML('beforeend', `
+                        <div class="node-group" data-node="_local">
+                            <div class="node-label">${hostname}</div>
+                            <div class="node-grid"></div>
+                        </div>
+                    `);
+                    nodeGrid = overviewContainer.querySelector('.node-grid');
+                }
+                nodeGrid.insertAdjacentHTML('beforeend', createCompactOverviewCard(gpuId, gpuInfo));
+            } else {
+                overviewContainer.insertAdjacentHTML('beforeend', createEnhancedOverviewCard(gpuId, gpuInfo));
+                // Auto-expand processes for single GPU
                 setTimeout(() => {
                     const content = document.getElementById('processes-content');
                     const header = document.querySelector('.processes-header');
@@ -241,6 +254,7 @@ function handleSocketMessage(event) {
                     }
                 }, 100);
             }
+            initOverviewMiniChart(gpuId, gpuInfo.utilization);
             lastDOMUpdate[gpuId] = now;
         }
     });

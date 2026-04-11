@@ -63,6 +63,45 @@ function updateOverviewCard(gpuId, gpuInfo, shouldUpdateDOM = true) {
 }
 
 // ============================================
+// Compact GPU Overview Card (multi-GPU single-server)
+// ============================================
+
+function createCompactOverviewCard(gpuId, gpuInfo) {
+    const memory_used = getMetricValue(gpuInfo, 'memory_used', 0);
+    const memory_total = getMetricValue(gpuInfo, 'memory_total', 1);
+    const memPercent = (memory_used / memory_total) * 100;
+
+    return `
+        <div class="overview-gpu-card" data-gpu-id="${gpuId}" onclick="switchToView('gpu-${gpuId}')">
+            <div class="overview-gpu-name">
+                <h2>GPU ${gpuId}</h2>
+                <p>${getMetricValue(gpuInfo, 'name', 'Unknown GPU')}</p>
+            </div>
+            <div class="overview-metrics">
+                <div class="overview-metric">
+                    <div class="overview-metric-value" id="overview-util-${gpuId}">${getMetricValue(gpuInfo, 'utilization', 0)}%</div>
+                    <div class="overview-metric-label">UTIL</div>
+                </div>
+                <div class="overview-metric">
+                    <div class="overview-metric-value" id="overview-temp-${gpuId}">${getMetricValue(gpuInfo, 'temperature', 0)}°</div>
+                    <div class="overview-metric-label">TEMP</div>
+                </div>
+                <div class="overview-metric">
+                    <div class="overview-metric-value" id="overview-mem-${gpuId}">${Math.round(memPercent)}%</div>
+                    <div class="overview-metric-label">MEM</div>
+                </div>
+                <div class="overview-metric">
+                    <div class="overview-metric-value" id="overview-power-${gpuId}">${getMetricValue(gpuInfo, 'power_draw', 0).toFixed(0)}W</div>
+                    <div class="overview-metric-label">POWER</div>
+                </div>
+            </div>
+            <div class="overview-mini-chart">
+                <canvas id="overview-chart-${gpuId}"></canvas>
+            </div>
+        </div>`;
+}
+
+// ============================================
 // Single GPU Overview — Enhanced Dashboard
 // ============================================
 
