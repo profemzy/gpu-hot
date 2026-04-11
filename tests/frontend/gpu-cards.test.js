@@ -200,3 +200,65 @@ describe('updateProcesses', () => {
         expect(container.innerHTML).toContain('No active GPU processes');
     });
 });
+
+describe('createCompactOverviewCard', () => {
+    const gpuInfo = {
+        name: 'NVIDIA RTX 3090',
+        utilization: 75,
+        temperature: 72,
+        memory_used: 8192,
+        memory_total: 24576,
+        power_draw: 250,
+        power_limit: 350,
+    };
+
+    it('returns HTML with GPU name', () => {
+        const html = createCompactOverviewCard('0', gpuInfo);
+        expect(html).toContain('RTX 3090');
+    });
+
+    it('includes overview-gpu-card class', () => {
+        const html = createCompactOverviewCard('0', gpuInfo);
+        expect(html).toContain('overview-gpu-card');
+    });
+
+    it('includes compact metric elements with overview- IDs', () => {
+        const html = createCompactOverviewCard('0', gpuInfo);
+        expect(html).toContain('overview-util-0');
+        expect(html).toContain('overview-temp-0');
+        expect(html).toContain('overview-mem-0');
+        expect(html).toContain('overview-power-0');
+    });
+
+    it('shows utilization percentage', () => {
+        const html = createCompactOverviewCard('0', gpuInfo);
+        expect(html).toContain('75%');
+    });
+
+    it('shows temperature with degree symbol', () => {
+        const html = createCompactOverviewCard('0', gpuInfo);
+        expect(html).toContain('72°');
+    });
+
+    it('shows memory as percentage', () => {
+        const html = createCompactOverviewCard('0', gpuInfo);
+        // 8192/24576 = 33.3%
+        expect(html).toContain('33%');
+    });
+
+    it('shows power in watts', () => {
+        const html = createCompactOverviewCard('0', gpuInfo);
+        expect(html).toContain('250W');
+    });
+
+    it('includes mini chart canvas', () => {
+        const html = createCompactOverviewCard('0', gpuInfo);
+        expect(html).toContain('overview-chart-0');
+        expect(html).toContain('<canvas');
+    });
+
+    it('includes onclick to switch view', () => {
+        const html = createCompactOverviewCard('2', gpuInfo);
+        expect(html).toContain("switchToView('gpu-2')");
+    });
+});
