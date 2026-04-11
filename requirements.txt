@@ -6,3 +6,6 @@ nvidia-ml-py==13.580.82
 requests==2.31.0
 websocket-client==1.6.3
 aiohttp==3.9.1
+# AMD GPU support (optional - installed automatically on systems with ROCm)
+# amdsmi is provided by the ROCm stack; do not pip-install it without libamd_smi.so
+# pip install amdsmi  # only on ROCm-enabled systems

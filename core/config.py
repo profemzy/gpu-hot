@@ -12,11 +12,12 @@ PORT = 1312
 DEBUG = False
 
 # Monitoring Configuration
-UPDATE_INTERVAL = 0.5  # Update interval for NVML (sub-second monitoring)
-NVIDIA_SMI_INTERVAL = 2.0  # Update interval for nvidia-smi fallback (slower to reduce overhead)
+UPDATE_INTERVAL = 0.5  # Update interval for library-based monitoring (NVML/amdsmi)
+CLI_FALLBACK_INTERVAL = 2.0  # Update interval for CLI fallback (nvidia-smi/rocm-smi)
+NVIDIA_SMI_INTERVAL = CLI_FALLBACK_INTERVAL  # Backward compatibility alias
 
 # GPU Monitoring Mode
-# Can be set via environment variable: NVIDIA_SMI=true
+# Can be set via environment variable: NVIDIA_SMI=true (force nvidia-smi for NVIDIA GPUs)
 NVIDIA_SMI = os.getenv('NVIDIA_SMI', 'false').lower() == 'true'
 
 # Multi-Node Configuration

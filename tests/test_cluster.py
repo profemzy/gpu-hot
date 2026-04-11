@@ -18,29 +18,53 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(messa
 logger = logging.getLogger(__name__)
 
 
+# GPU profiles: (name, vram_mb, max_power_w, clock_base_range, vendor)
+GPU_PROFILES = {
+    'nvidia': [
+        ('NVIDIA RTX 3080', 12288, 250, (1710, 1890), 'nvidia'),
+        ('NVIDIA RTX 3090', 24576, 350, (1710, 1890), 'nvidia'),
+        ('NVIDIA RTX 4090', 24576, 450, (2235, 2520), 'nvidia'),
+        ('NVIDIA A100', 81920, 300, (1065, 1410), 'nvidia'),
+    ],
+    'amd': [
+        ('AMD Radeon RX 7900 XTX', 24576, 355, (2000, 2500), 'amd'),
+        ('AMD Radeon RX 7900 XT', 20480, 315, (1900, 2400), 'amd'),
+        ('AMD Radeon RX 7800 XT', 16384, 263, (1800, 2430), 'amd'),
+        ('AMD Instinct MI250X', 131072, 500, (1500, 1700), 'amd'),
+    ],
+}
+
+
 class MockGPUNode:
     """Simulates a GPU node with realistic metrics for load testing"""
-    
-    def __init__(self, node_name, gpu_count, port=1312):
+
+    def __init__(self, node_name, gpu_count, port=1312, vendor='nvidia'):
         self.node_name = node_name
         self.gpu_count = gpu_count
         self.port = port
+        self.vendor = vendor
         self.app = FastAPI(title=f"Mock GPU Node {node_name}")
         self.websocket_connections = set()
         self.broadcasting = False
-        
+
+        profiles = GPU_PROFILES.get(vendor, GPU_PROFILES['nvidia'])
+
         # Initialize per-GPU state for realistic patterns
         self.gpu_states = []
         for gpu_id in range(gpu_count):
-            mem_total = random.choice([12288, 24576])
+            profile = random.choice(profiles)
+            gpu_name, mem_total, max_power, clock_range, gpu_vendor = profile
             is_busy = random.random() < 0.4
             self.gpu_states.append({
                 'base_temp': random.randint(45, 55),
                 'is_busy': is_busy,
                 'job_start': time.time() - random.uniform(0, 300),
                 'memory': mem_total,
+                'max_power': max_power,
                 'allocated_memory': mem_total * random.uniform(0.6, 0.92) if is_busy else 0,
-                'clock_base': random.randint(1710, 1890),
+                'clock_base': random.randint(*clock_range),
+                'gpu_name': gpu_name,
+                'vendor': gpu_vendor,
             })
         
         self.start_time = time.time()
@@ -100,12 +124,11 @@ class MockGPUNode:
             target_temp = state['base_temp'] + (util / 100) * 35
             temp_variation = random.gauss(0, 1)
             temp = max(30, min(92, target_temp + temp_variation))
-            
+
             # Power: correlates with utilization
-            mem_base = state['memory']
-            max_power = 250 if mem_base == 12288 else 350
+            max_power = state['max_power']
             power = (util / 100) * max_power * random.uniform(0.85, 1.0)
-            
+
             # Clock speeds: stable based on load
             if util > 50:
                 clock_graphics = state['clock_base'] + random.randint(-20, 20)
@@ -116,27 +139,33 @@ class MockGPUNode:
             else:
                 clock_graphics = random.randint(210, 500)
                 pstate = 'P8'
-            
-            gpus[str(gpu_id)] = {
+
+            gpu_entry = {
                 'index': gpu_id,
-                'name': f'NVIDIA RTX {"3090" if mem_base == 24576 else "3080"}',
+                'name': state['gpu_name'],
+                'vendor': state['vendor'],
                 'utilization': round(util, 1),
                 'temperature': round(temp, 1),
                 'memory_used': round(mem_used, 0),
-                'memory_total': mem_base,
+                'memory_total': state['memory'],
                 'power_draw': round(power, 1),
                 'power_limit': max_power,
                 'fan_speed': round(min(100, 30 + max(0, temp - 40) * 1.5)),
                 'clock_graphics': clock_graphics,
-                'clock_sm': clock_graphics,
-                'clock_memory': 9501 if mem_base == 24576 else 9001,
+                'clock_memory': 9501 if state['memory'] >= 24576 else 9001,
                 'pcie_gen': 4,
                 'pcie_width': 16,
                 'pstate': pstate,
-                'encoder_sessions': 0,
-                'decoder_sessions': 0,
                 'throttle_reasons': []
             }
+
+            # NVIDIA-specific fields
+            if state['vendor'] == 'nvidia':
+                gpu_entry['clock_sm'] = clock_graphics
+                gpu_entry['encoder_sessions'] = 0
+                gpu_entry['decoder_sessions'] = 0
+
+            gpus[str(gpu_id)] = gpu_entry
             
             # Add processes for busy GPUs
             if state['is_busy']:
@@ -228,9 +257,9 @@ class MockGPUNode:
         await server.serve()
 
 
-async def start_mock_node(node_name, gpu_count, port):
+async def start_mock_node(node_name, gpu_count, port, vendor='nvidia'):
     """Start a mock node as async task"""
-    node = MockGPUNode(node_name, gpu_count, port)
+    node = MockGPUNode(node_name, gpu_count, port, vendor=vendor)
     await node.run()
 
 
@@ -242,23 +271,38 @@ async def main():
                       help='Base port for nodes (increments for each node)')
     parser.add_argument('--prefix', type=str, default='gpu-server',
                       help='Prefix for node names')
-    
+    parser.add_argument('--vendors', type=str, default=None,
+                      help='Comma-separated vendor per node: nvidia or amd (e.g., "nvidia,amd,nvidia"). '
+                           'Defaults to all nvidia. Use "mixed" to auto-assign alternating vendors.')
+
     args = parser.parse_args()
-    
+
     gpu_counts = [int(x.strip()) for x in args.nodes.split(',')]
-    
+
+    # Resolve vendor per node
+    if args.vendors is None:
+        vendors = ['nvidia'] * len(gpu_counts)
+    elif args.vendors == 'mixed':
+        vendors = ['nvidia' if i % 2 == 0 else 'amd' for i in range(len(gpu_counts))]
+    else:
+        vendors = [v.strip() for v in args.vendors.split(',')]
+        # Pad with last value if fewer vendors than nodes
+        while len(vendors) < len(gpu_counts):
+            vendors.append(vendors[-1])
+
     print("\n" + "="*60)
     print("GPU Hot - Mock Cluster Test (FastAPI + AsyncIO)")
     print("="*60)
     print(f"\nStarting {len(gpu_counts)} mock GPU servers:\n")
-    
+
     node_urls = []
     for i, gpu_count in enumerate(gpu_counts):
         port = args.base_port + i
         node_name = f"{args.prefix}-{i+1}"
+        vendor = vendors[i]
         node_urls.append(f"http://localhost:{port}")
-        print(f"  • {node_name}: {gpu_count} GPUs on port {port}")
-    
+        print(f"  • {node_name}: {gpu_count} {vendor.upper()} GPUs on port {port}")
+
     print("\n" + "-"*60)
     print("Mock nodes running! Now start the hub with:")
     print("-"*60)
@@ -273,15 +317,16 @@ async def main():
     print(f"  ghcr.io/psalias2006/gpu-hot:latest")
     print("\nThen open: http://localhost:1312")
     print("-"*60 + "\n")
-    
+
     # Start all nodes concurrently
     tasks = []
     for i, gpu_count in enumerate(gpu_counts):
         port = args.base_port + i
         node_name = f"{args.prefix}-{i+1}"
-        task = asyncio.create_task(start_mock_node(node_name, gpu_count, port))
+        vendor = vendors[i]
+        task = asyncio.create_task(start_mock_node(node_name, gpu_count, port, vendor))
         tasks.append(task)
-    
+
     # Keep all tasks running
     try:
         await asyncio.gather(*tasks)

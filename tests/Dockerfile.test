@@ -18,6 +18,7 @@ EXPOSE 13120-13150
 ENV NODES="2,4,8"
 ENV BASE_PORT="13120"
 ENV PREFIX="gpu-server"
+ENV VENDORS=""
 
-CMD python3 test_cluster.py --nodes ${NODES} --base-port ${BASE_PORT} --prefix ${PREFIX}
+CMD python3 test_cluster.py --nodes ${NODES} --base-port ${BASE_PORT} --prefix ${PREFIX} ${VENDORS:+--vendors ${VENDORS}}
 

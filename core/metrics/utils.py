@@ -1,14 +1,12 @@
 """Utility functions for metrics collection"""
 
-import pynvml
-
 
 def safe_get(func, *args, default=None):
-    """Safely call NVML function, returns default if unsupported"""
+    """Safely call a GPU library function, returns default if unsupported"""
     try:
         result = func(*args)
         return result if result is not None else default
-    except (pynvml.NVMLError, Exception):
+    except Exception:
         return default
 
 

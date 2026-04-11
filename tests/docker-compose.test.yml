@@ -19,6 +19,13 @@ services:
 
       - BASE_PORT=13120
       - PREFIX=gpu-server
+      # VENDOR PRESETS - set vendor per node (default: all nvidia)
+      # All AMD:
+      #- VENDORS=amd
+      # Mixed (alternating nvidia/amd):
+      - VENDORS=mixed
+      # Per-node control (must match NODES count):
+      #- VENDORS=nvidia,amd,nvidia
     networks:
       gpu-hot-test:
         aliases:

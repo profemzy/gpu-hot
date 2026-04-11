@@ -143,6 +143,30 @@ def sample_gpu_info():
 
 
 @pytest.fixture
+def sample_amd_gpu_info():
+    """Sample AMD GPU info dict as returned by the backend."""
+    return {
+        'index': '0',
+        'name': 'AMD Radeon RX 7900 XTX',
+        'vendor': 'amd',
+        'utilization': 80.0,
+        'memory_utilization': 40.0,
+        'temperature': 65.0,
+        'memory_used': 16384.0,
+        'memory_total': 24576.0,
+        'memory_free': 8192.0,
+        'power_draw': 300.0,
+        'power_limit': 355.0,
+        'fan_speed': 50.0,
+        'clock_graphics': 2400.0,
+        'clock_memory': 1250.0,
+        'pcie_gen': '4',
+        'pcie_width': '16',
+        'timestamp': '2025-01-01T00:00:00',
+    }
+
+
+@pytest.fixture
 def sample_system_info():
     """Sample system info dict as collected by the monitor loop."""
     return {

@@ -14,7 +14,7 @@ class TestMonitorLoop:
         """Monitor loop collects GPU data and broadcasts to connected clients."""
         monitor = MagicMock()
         monitor.running = True
-        monitor.use_smi = {}
+        monitor.uses_cli_fallback = False
         monitor.get_gpu_data = AsyncMock(return_value={'0': {'name': 'RTX 3090', 'utilization': 75}})
         monitor.get_processes = AsyncMock(return_value=[])
 
@@ -59,7 +59,7 @@ class TestMonitorLoop:
         """Clients that raise on send are removed from the connection set."""
         monitor = MagicMock()
         monitor.running = True
-        monitor.use_smi = {}
+        monitor.uses_cli_fallback = False
         monitor.get_gpu_data = AsyncMock(return_value={})
         monitor.get_processes = AsyncMock(return_value=[])
 
@@ -96,7 +96,7 @@ class TestMonitorLoop:
         """Uses faster UPDATE_INTERVAL when no GPUs use nvidia-smi."""
         monitor = MagicMock()
         monitor.running = True
-        monitor.use_smi = {'0': False}
+        monitor.uses_cli_fallback = False
         monitor.get_gpu_data = AsyncMock(return_value={})
         monitor.get_processes = AsyncMock(return_value=[])
 
@@ -129,7 +129,7 @@ class TestMonitorLoop:
         """Uses slower NVIDIA_SMI_INTERVAL when any GPU uses nvidia-smi."""
         monitor = MagicMock()
         monitor.running = True
-        monitor.use_smi = {'0': True}
+        monitor.uses_cli_fallback = True
         monitor.get_gpu_data = AsyncMock(return_value={})
         monitor.get_processes = AsyncMock(return_value=[])
 
@@ -155,14 +155,14 @@ class TestMonitorLoop:
 
             await monitor_loop(monitor, set())
 
-        assert sleep_intervals[0] == 2.0  # config.NVIDIA_SMI_INTERVAL
+        assert sleep_intervals[0] == 2.0  # config.CLI_FALLBACK_INTERVAL
 
     @pytest.mark.asyncio
     async def test_system_info_included(self):
         """System info (CPU, memory, etc.) is included in broadcast."""
         monitor = MagicMock()
         monitor.running = True
-        monitor.use_smi = {}
+        monitor.uses_cli_fallback = False
         monitor.get_gpu_data = AsyncMock(return_value={})
         monitor.get_processes = AsyncMock(return_value=[])
 
