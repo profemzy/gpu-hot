@@ -1,45 +1,58 @@
 /* ============================================
-   GPU Studio — Design Tokens
-   Swiss Minimalist / Industrial Dark
+   GPU Hot — Design Tokens
+   Neon Dashboard — Premium Edition
    ============================================ */
 
 :root {
-    /* Background — warm dark slate */
-    --bg-primary: #111318;
-    --bg-surface: #171b22;
-    --bg-elevated: #1e2330;
+    /* Background — ultra-deep void */
+    --bg-primary: #06080f;
+    --bg-surface: #0c1018;
+    --bg-elevated: #141a28;
 
-    /* Text — slightly warm white */
-    --text-primary: #eef0f4;
-    --text-secondary: rgba(238, 240, 244, 0.72);
-    --text-tertiary: rgba(238, 240, 244, 0.45);
+    /* Background mesh gradient overlays */
+    --bg-mesh-1: rgba(99, 146, 255, 0.07);
+    --bg-mesh-2: rgba(56, 189, 248, 0.05);
+    --bg-mesh-3: rgba(192, 132, 252, 0.04);
 
-    /* Accent — Steel Blue at 20% opacity, for selection/active only */
-    --accent: rgba(100, 160, 255, 0.18);
-    --accent-text: #6ea8fe;
+    /* Text — crisp high-contrast */
+    --text-primary: #eef1f8;
+    --text-secondary: rgba(238, 241, 248, 0.6);
+    --text-tertiary: rgba(238, 241, 248, 0.32);
 
-    /* Signal — color is forbidden except for warnings */
-    --warning: #f5a623;
-    --danger: #f44;
-    --ok: rgba(238, 240, 244, 0.5);
+    /* Accent — vivid electric blue */
+    --accent: rgba(99, 146, 255, 0.18);
+    --accent-text: #7aa8ff;
 
-    /* Metric Identity Colors (RGB channels for flexible opacity) */
-    --metric-util: 130, 177, 255;
-    --metric-temp: 255, 183, 77;
-    --metric-mem: 100, 210, 255;
-    --metric-power: 134, 239, 172;
-    --metric-fan: 186, 147, 216;
-    --metric-clocks: 255, 213, 130;
-    --metric-efficiency: 168, 216, 185;
-    --metric-pcie: 176, 190, 210;
+    /* Signal colors — vivid neon */
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --ok: rgba(52, 211, 153, 0.7);
+
+    /* Metric Identity — vivid neon for glows and gradients */
+    --metric-util: 99, 146, 255;
+    --metric-temp: 255, 167, 38;
+    --metric-mem: 56, 189, 248;
+    --metric-power: 52, 211, 153;
+    --metric-fan: 192, 132, 252;
+    --metric-clocks: 251, 191, 36;
+    --metric-efficiency: 110, 231, 183;
+    --metric-pcie: 148, 163, 184;
+
+    /* Gradient definitions for metric values */
+    --gradient-util: linear-gradient(135deg, #6392ff, #a5c0ff);
+    --gradient-temp: linear-gradient(135deg, #ffa726, #ffcc02);
+    --gradient-mem: linear-gradient(135deg, #38bdf8, #67e8f9);
+    --gradient-power: linear-gradient(135deg, #34d399, #6ee7b7);
+    --gradient-fan: linear-gradient(135deg, #c084fc, #d8b4fe);
+    --gradient-default: linear-gradient(135deg, #eef1f8, #c4cada);
 
     /* Sparkline */
-    --spark-stroke: rgba(238, 240, 244, 0.6);
-    --spark-stroke-secondary: rgba(238, 240, 244, 0.35);
+    --spark-stroke: rgba(238, 241, 248, 0.5);
+    --spark-stroke-secondary: rgba(238, 241, 248, 0.22);
 
     /* Bullet bar */
-    --bar-track: rgba(255, 255, 255, 0.07);
-    --bar-fill: rgba(255, 255, 255, 0.22);
+    --bar-track: rgba(255, 255, 255, 0.06);
+    --bar-fill: rgba(255, 255, 255, 0.18);
     --bar-fill-warning: var(--warning);
     --bar-fill-danger: var(--danger);
 
@@ -52,54 +65,129 @@
     --space-2xl: 64px;
 
     /* Sidebar */
-    --sidebar-width: 56px;
+    --sidebar-width: 220px;
 
     /* Typography */
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-mono: 'SF Mono', 'Menlo', 'Consolas', 'Liberation Mono', monospace;
+    --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', 'Menlo', 'Consolas', 'Liberation Mono', monospace;
 
-    /* Borders — kept minimal, only for structure */
-    --border-subtle: rgba(255, 255, 255, 0.07);
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.25);
+    --shadow-glow: 0 0 40px rgba(99, 146, 255, 0.12);
+
+    /* Borders */
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-medium: rgba(255, 255, 255, 0.1);
+    --border-strong: rgba(255, 255, 255, 0.16);
+
+    /* Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
 
     /* Transitions */
-    --transition-fast: 0.1s ease;
-    --transition-normal: 0.2s ease;
+    --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
-    /* Accent glow (connected status) */
-    --accent-glow: rgba(130, 200, 130, 0.6);
+    /* Accent glow */
+    --accent-glow: rgba(52, 211, 153, 0.7);
 
-    /* Focus ring for accessibility */
+    /* Focus ring */
     --focus-ring-color: var(--accent-text);
     --focus-ring-offset: 2px;
     --focus-ring-width: 2px;
 
-    /* Hover state colors (for both themes) */
+    /* Hover states */
     --hover-bg: rgba(255, 255, 255, 0.04);
     --hover-bg-subtle: rgba(255, 255, 255, 0.02);
-    --hover-bg-card: rgba(255, 255, 255, 0.03);
+    --hover-bg-card: rgba(255, 255, 255, 0.04);
 
-    /* Card/container backgrounds */
-    --bg-card: rgba(255, 255, 255, 0.015);
-    --bg-panel: rgba(255, 255, 255, 0.015);
+    /* Card / container */
+    --bg-card: rgba(12, 16, 24, 0.6);
+    --bg-panel: rgba(10, 14, 22, 0.4);
+    --card-border: rgba(255, 255, 255, 0.06);
+    --card-border-hover: rgba(255, 255, 255, 0.12);
 
     /* Overlay */
-    --overlay-bg: rgba(0, 0, 0, 0.6);
+    --overlay-bg: rgba(0, 0, 0, 0.7);
 
-    /* Zebra striping for tables */
-    --zebra-bg: rgba(255, 255, 255, 0.015);
+    /* Zebra */
+    --zebra-bg: rgba(255, 255, 255, 0.02);
 
-    /* Drawer companion chip colors */
+    /* Drawer companion */
     --companion-chip-border: rgba(255, 255, 255, 0.08);
-    --companion-chip-hover-border: rgba(255, 255, 255, 0.15);
-    --companion-chip-active-bg: rgba(255, 170, 50, 0.12);
-    --companion-chip-active-border: rgba(255, 170, 50, 0.30);
-    --companion-chip-active-text: rgba(255, 170, 50, 0.85);
+    --companion-chip-hover-border: rgba(255, 255, 255, 0.18);
+    --companion-chip-active-bg: rgba(255, 167, 38, 0.12);
+    --companion-chip-active-border: rgba(255, 167, 38, 0.35);
+    --companion-chip-active-text: rgba(255, 167, 38, 0.9);
 
-    /* Section divider */
+    /* Divider */
     --divider-color: rgba(255, 255, 255, 0.06);
 
-    /* Secondary metric text */
-    --metric-secondary-text: rgba(255, 255, 255, 0.75);
+    /* Secondary text */
+    --metric-secondary-text: rgba(255, 255, 255, 0.6);
+
+    /* Temperature border status */
+    --status-ok: rgba(52, 211, 153, 0.8);
+    --status-warning: var(--warning);
+    --status-danger: var(--danger);
+
+    /* Glass */
+    --glass-bg: rgba(10, 14, 22, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-blur: 16px;
+
+    /* Neon glows */
+    --glow-util: 0 0 20px rgba(99, 146, 255, 0.15);
+    --glow-temp: 0 0 20px rgba(255, 167, 38, 0.15);
+    --glow-mem: 0 0 20px rgba(56, 189, 248, 0.15);
+    --glow-power: 0 0 20px rgba(52, 211, 153, 0.15);
+    --glow-danger: 0 0 24px rgba(248, 113, 113, 0.25);
+    --glow-warning: 0 0 24px rgba(251, 191, 36, 0.2);
+
+    /* Sidebar */
+    --sidebar-active-border: rgba(99, 146, 255, 0.15);
+    --sidebar-active-glow: var(--glow-util);
+    --gradient-logo: linear-gradient(135deg, #6392ff 0%, #38bdf8 40%, #34d399 80%, #c084fc 100%);
+    --sidebar-chart-stroke: rgba(255, 255, 255, 0.5);
+
+    /* Status */
+    --status-dot-connected: #34d399;
+    --status-dot-connected-glow: 0 0 8px rgba(52, 211, 153, 0.6), 0 0 20px rgba(52, 211, 153, 0.2);
+
+    /* Card border status gradients */
+    --gradient-warning-border: linear-gradient(180deg, var(--warning), rgba(255, 167, 38, 0.4));
+    --gradient-danger-border: linear-gradient(180deg, var(--danger), rgba(248, 113, 113, 0.4));
+
+    /* Bullet bar fills */
+    --gradient-warning-bar: linear-gradient(90deg, rgba(251, 191, 36, 0.6), rgba(251, 191, 36, 0.95));
+    --gradient-danger-bar: linear-gradient(90deg, rgba(248, 113, 113, 0.6), rgba(248, 113, 113, 0.95));
+
+    /* Danger text gradient */
+    --gradient-danger-text: linear-gradient(135deg, #f87171, #fca5a5);
+
+    /* Star toast */
+    --star-border: rgba(251, 191, 36, 0.2);
+    --star-border-accent: rgba(251, 191, 36, 0.6);
+    --star-shadow: 0 0 40px rgba(251, 191, 36, 0.06);
+    --star-btn-border: rgba(251, 191, 36, 0.3);
+    --star-btn-bg: rgba(251, 191, 36, 0.08);
+    --star-btn-text: rgba(255, 200, 100, 0.9);
+    --star-btn-hover-bg: rgba(251, 191, 36, 0.18);
+    --star-btn-hover-text: rgba(255, 210, 130, 1);
+    --star-btn-hover-border: rgba(251, 191, 36, 0.45);
+    --star-progress-fill: linear-gradient(90deg, rgba(251, 191, 36, 0.6), rgba(251, 191, 36, 0.9));
+
+    /* Shadows */
+    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.2);
+    --shadow-drawer: -8px 0 40px rgba(0, 0, 0, 0.3);
+
+    /* Charts */
+    --chart-crosshair: rgba(130, 177, 255, 0.25);
 }
 
 /* ============================================
@@ -107,78 +195,135 @@
    ============================================ */
 
 [data-theme="light"] {
-    /* Background — light warm gray */
-    --bg-primary: #f8f9fa;
-    --bg-surface: #e8eaef;
-    --bg-elevated: #dcdfe6;
+    --bg-primary: #f0f4f8;
+    --bg-surface: #ffffff;
+    --bg-elevated: #e8ecf4;
 
-    /* Text — dark slate for contrast (WCAG AA compliant) */
-    --text-primary: #1a1d26;
-    --text-secondary: rgba(26, 29, 38, 0.72);
-    --text-tertiary: rgba(26, 29, 38, 0.50);
+    --bg-mesh-1: rgba(59, 130, 246, 0.08);
+    --bg-mesh-2: rgba(14, 165, 233, 0.06);
+    --bg-mesh-3: rgba(147, 51, 234, 0.04);
 
-    /* Accent — slightly darker steel blue for visibility on light bg */
-    --accent: rgba(80, 140, 255, 0.18);
-    --accent-text: #4a90e2;
+    --text-primary: #0f172a;
+    --text-secondary: rgba(15, 23, 42, 0.55);
+    --text-tertiary: rgba(15, 23, 42, 0.35);
 
-    /* Signal colors remain the same */
+    --accent: rgba(59, 130, 246, 0.1);
+    --accent-text: #3b82f6;
+
     --warning: #d97706;
     --danger: #dc2626;
-    --ok: rgba(26, 29, 38, 0.5);
+    --ok: rgba(16, 185, 129, 0.7);
 
-    /* Metric Identity Colors — slightly darker for visibility on light bg */
-    --metric-util: 70, 130, 220;
-    --metric-temp: 200, 140, 50;
-    --metric-mem: 60, 170, 210;
-    --metric-power: 80, 180, 130;
-    --metric-fan: 140, 110, 180;
-    --metric-clocks: 200, 170, 90;
-    --metric-efficiency: 120, 180, 140;
-    --metric-pcie: 130, 145, 165;
+    --metric-util: 59, 130, 246;
+    --metric-temp: 234, 138, 22;
+    --metric-mem: 14, 165, 233;
+    --metric-power: 16, 185, 129;
+    --metric-fan: 147, 51, 234;
+    --metric-clocks: 202, 138, 4;
+    --metric-efficiency: 5, 150, 105;
+    --metric-pcie: 100, 116, 139;
 
-    /* Sparkline — darker strokes for light bg */
-    --spark-stroke: rgba(26, 29, 38, 0.55);
-    --spark-stroke-secondary: rgba(26, 29, 38, 0.30);
+    --gradient-util: linear-gradient(135deg, #3b82f6, #60a5fa);
+    --gradient-temp: linear-gradient(135deg, #ea8a16, #f5b942);
+    --gradient-mem: linear-gradient(135deg, #0ea5e9, #38bdf8);
+    --gradient-power: linear-gradient(135deg, #10b981, #34d399);
+    --gradient-fan: linear-gradient(135deg, #9333ea, #a855f7);
+    --gradient-default: linear-gradient(135deg, #334155, #64748b);
 
-    /* Bullet bar — inverted */
-    --bar-track: rgba(0, 0, 0, 0.08);
-    --bar-fill: rgba(0, 0, 0, 0.25);
+    --spark-stroke: rgba(15, 23, 42, 0.45);
+    --spark-stroke-secondary: rgba(15, 23, 42, 0.2);
+
+    --bar-track: rgba(0, 0, 0, 0.06);
+    --bar-fill: rgba(0, 0, 0, 0.18);
     --bar-fill-warning: var(--warning);
     --bar-fill-danger: var(--danger);
 
-    /* Borders — darker for visibility */
-    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-subtle: rgba(0, 0, 0, 0.06);
+    --border-medium: rgba(0, 0, 0, 0.1);
+    --border-strong: rgba(0, 0, 0, 0.15);
 
-    /* Accent glow — slightly darker for light bg */
-    --accent-glow: rgba(80, 160, 80, 0.5);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05);
+    --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.08);
 
-    /* Hover states — inverted */
-    --hover-bg: rgba(0, 0, 0, 0.04);
-    --hover-bg-subtle: rgba(0, 0, 0, 0.02);
+    --hover-bg: rgba(0, 0, 0, 0.03);
+    --hover-bg-subtle: rgba(0, 0, 0, 0.015);
     --hover-bg-card: rgba(0, 0, 0, 0.03);
 
-    /* Card/container backgrounds */
-    --bg-card: rgba(0, 0, 0, 0.02);
-    --bg-panel: rgba(0, 0, 0, 0.02);
+    --bg-card: rgba(255, 255, 255, 0.85);
+    --bg-panel: rgba(240, 244, 248, 0.6);
+    --card-border: rgba(0, 0, 0, 0.06);
+    --card-border-hover: rgba(0, 0, 0, 0.12);
 
-    /* Overlay — lighter for light bg */
-    --overlay-bg: rgba(0, 0, 0, 0.4);
+    --overlay-bg: rgba(15, 23, 42, 0.5);
 
-    /* Zebra striping */
     --zebra-bg: rgba(0, 0, 0, 0.02);
 
-    /* Drawer companion chip colors */
     --companion-chip-border: rgba(0, 0, 0, 0.08);
     --companion-chip-hover-border: rgba(0, 0, 0, 0.15);
-    --companion-chip-active-bg: rgba(200, 130, 40, 0.12);
-    --companion-chip-active-border: rgba(200, 130, 40, 0.35);
-    --companion-chip-active-text: rgba(200, 130, 40, 0.85);
+    --companion-chip-active-bg: rgba(234, 138, 22, 0.1);
+    --companion-chip-active-border: rgba(234, 138, 22, 0.3);
+    --companion-chip-active-text: rgba(180, 100, 10, 0.85);
 
-    /* Section divider */
     --divider-color: rgba(0, 0, 0, 0.06);
 
-    /* Secondary metric text */
-    --metric-secondary-text: rgba(26, 29, 38, 0.70);
+    --metric-secondary-text: rgba(15, 23, 42, 0.55);
+
+    --status-ok: rgba(16, 185, 129, 0.85);
+    --status-warning: var(--warning);
+    --status-danger: var(--danger);
+
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(0, 0, 0, 0.06);
+    --glass-blur: 20px;
+
+    --glow-util: 0 0 20px rgba(59, 130, 246, 0.08);
+    --glow-temp: 0 0 20px rgba(234, 138, 22, 0.08);
+    --glow-mem: 0 0 20px rgba(14, 165, 233, 0.08);
+    --glow-power: 0 0 20px rgba(16, 185, 129, 0.08);
+    --glow-danger: 0 0 24px rgba(220, 38, 38, 0.12);
+    --glow-warning: 0 0 24px rgba(217, 119, 6, 0.1);
+
+    /* Sidebar */
+    --sidebar-active-border: rgba(59, 130, 246, 0.15);
+    --sidebar-active-glow: var(--glow-util);
+    --gradient-logo: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 40%, #10b981 80%, #9333ea 100%);
+    --sidebar-chart-stroke: rgba(15, 23, 42, 0.35);
+
+    /* Status */
+    --status-dot-connected: #10b981;
+    --status-dot-connected-glow: 0 0 8px rgba(16, 185, 129, 0.4), 0 0 20px rgba(16, 185, 129, 0.15);
+
+    /* Card border status gradients */
+    --gradient-warning-border: linear-gradient(180deg, var(--warning), rgba(217, 119, 6, 0.4));
+    --gradient-danger-border: linear-gradient(180deg, var(--danger), rgba(220, 38, 38, 0.4));
+
+    /* Bullet bar fills */
+    --gradient-warning-bar: linear-gradient(90deg, rgba(217, 119, 6, 0.6), rgba(217, 119, 6, 0.95));
+    --gradient-danger-bar: linear-gradient(90deg, rgba(220, 38, 38, 0.6), rgba(220, 38, 38, 0.95));
+
+    /* Danger text gradient */
+    --gradient-danger-text: linear-gradient(135deg, #dc2626, #fca5a5);
+
+    /* Star toast */
+    --star-border: rgba(217, 119, 6, 0.2);
+    --star-border-accent: rgba(217, 119, 6, 0.6);
+    --star-shadow: 0 0 40px rgba(217, 119, 6, 0.05);
+    --star-btn-border: rgba(217, 119, 6, 0.3);
+    --star-btn-bg: rgba(217, 119, 6, 0.08);
+    --star-btn-text: rgba(180, 100, 10, 0.9);
+    --star-btn-hover-bg: rgba(217, 119, 6, 0.15);
+    --star-btn-hover-text: rgba(140, 70, 5, 1);
+    --star-btn-hover-border: rgba(217, 119, 6, 0.45);
+    --star-progress-fill: linear-gradient(90deg, rgba(217, 119, 6, 0.6), rgba(217, 119, 6, 0.9));
+
+    /* Shadows */
+    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-drawer: -8px 0 40px rgba(0, 0, 0, 0.15);
+
+    /* Charts */
+    --chart-crosshair: rgba(59, 130, 246, 0.2);
 }
 
 /* ============================================
@@ -201,85 +346,62 @@ html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
 }
 
 body {
     font-family: var(--font-sans);
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.6;
     color: var(--text-primary);
     background: var(--bg-primary);
     min-height: 100vh;
     overflow-x: hidden;
+    position: relative;
+}
+
+/* Mesh gradient background */
+.bg-mesh {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse at 15% 50%, var(--bg-mesh-1) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 20%, var(--bg-mesh-2) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 90%, var(--bg-mesh-3) 0%, transparent 45%);
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+.studio {
+    position: relative;
+    z-index: 1;
 }
 
 /* ============================================
-   Scrollbar — Minimal
+   Scrollbar
    ============================================ */
 
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-medium); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
 
-::-webkit-scrollbar-track {
-    background: transparent;
-}
+/* Selection */
+::selection { background: var(--accent); color: var(--text-primary); }
 
-::-webkit-scrollbar-thumb {
-    background: var(--bar-track);
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--bar-fill);
-}
-
-/* ============================================
-   Selection
-   ============================================ */
-
-::selection {
-    background: var(--accent);
-    color: var(--text-primary);
-}
-
-/* ============================================
-   Reduced Motion — Accessibility
-   ============================================ */
-
+/* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
+    *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
-
-    /* Disable hover transforms */
-    .overview-gpu-card:hover,
-    .sidebar-btn:hover,
-    .sidebar-link:hover,
-    .single-gpu-overview:hover,
-    .drawer:hover {
-        transform: none !important;
-    }
-
-    /* Disable skeleton shimmer */
-    .skeleton {
-        animation: none !important;
-    }
-
-    /* Disable loading dot pulse */
-    .loading-dot {
-        animation: none !important;
-        opacity: 0.5;
-    }
-
-    /* Disable status dot pulse */
-    .status-dot.connecting {
-        animation: none !important;
-    }
+    .overview-gpu-card:hover, .sidebar-btn:hover { transform: none !important; }
+    .skeleton { animation: none !important; }
+    .loading-dot { animation: none !important; opacity: 0.5; }
+    .status-dot.connecting { animation: none !important; }
+    .bg-mesh { display: none; }
 }

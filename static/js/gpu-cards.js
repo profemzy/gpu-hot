@@ -118,30 +118,30 @@ function createCompactOverviewCard(gpuId, gpuInfo) {
                     <h2>GPU ${gpuId}</h2>
                     <p>${gpuName}</p>
                 </div>
-                <div class="overview-metrics">
+<div class="overview-metrics">
                     <div class="overview-metric">
-                        <div class="overview-metric-value" id="overview-util-${gpuId}">${getMetricValue(gpuInfo, 'utilization', 0)}%</div>
+                        <div class="overview-metric-value" data-metric-type="utilization" id="overview-util-${gpuId}">${getMetricValue(gpuInfo, 'utilization', 0)}%</div>
                         <div class="overview-metric-label">
                             <svg class="metric-icon" aria-hidden="true"><use href="#icon-speedometer"/></svg>
                             UTIL
                         </div>
                     </div>
                     <div class="overview-metric">
-                        <div class="overview-metric-value" id="overview-temp-${gpuId}">${temperature}°</div>
+                        <div class="overview-metric-value" data-metric-type="temperature" id="overview-temp-${gpuId}">${temperature}°</div>
                         <div class="overview-metric-label">
                             <svg class="metric-icon" aria-hidden="true"><use href="#icon-thermometer"/></svg>
                             TEMP
                         </div>
                     </div>
                     <div class="overview-metric">
-                        <div class="overview-metric-value" id="overview-mem-${gpuId}">${Math.round(memPercent)}%</div>
+                        <div class="overview-metric-value" data-metric-type="memory" id="overview-mem-${gpuId}">${Math.round(memPercent)}%</div>
                         <div class="overview-metric-label">
                             <svg class="metric-icon" aria-hidden="true"><use href="#icon-memory"/></svg>
                             MEM
                         </div>
                     </div>
                     <div class="overview-metric">
-                        <div class="overview-metric-value" id="overview-power-${gpuId}">${getMetricValue(gpuInfo, 'power_draw', 0).toFixed(0)}W</div>
+                        <div class="overview-metric-value" data-metric-type="power" id="overview-power-${gpuId}">${getMetricValue(gpuInfo, 'power_draw', 0).toFixed(0)}W</div>
                         <div class="overview-metric-label">
                             <svg class="metric-icon" aria-hidden="true"><use href="#icon-bolt"/></svg>
                             POWER

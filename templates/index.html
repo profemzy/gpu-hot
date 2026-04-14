@@ -9,9 +9,13 @@
         content="Real-time NVIDIA GPU monitoring dashboard — temperature, utilization, memory, power and more">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 
+    <script>
+    (function(){try{var m=localStorage.getItem('gpu-hot-theme-mode');var l=localStorage.getItem('gpu-hot-theme');if(l){m=l;localStorage.setItem('gpu-hot-theme-mode',l);localStorage.removeItem('gpu-hot-theme')}var t;if(m==='dark')t='dark';else if(m==='light')t='light';else t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','dark')}})();
+    </script>
+
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wcdt@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Application Styles (modular) -->
     <link rel="stylesheet" href="/static/css/tokens.css">
@@ -21,6 +25,9 @@
 </head>
 
 <body>
+    <!-- Gradient mesh background -->
+    <div class="bg-mesh" aria-hidden="true"></div>
+
     <!-- Icon Sprite (hidden, referenced via <use>) -->
     <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
       <symbol id="icon-gpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -131,38 +138,57 @@
       <symbol id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
       </symbol>
+      <symbol id="icon-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+        <circle cx="8" cy="10" r="3"/>
+        <path d="M17 7l3 3-3 3"/>
+      </symbol>
     </svg>
 
     <div class="studio">
         <!-- Sidebar -->
         <aside class="sidebar" role="navigation" aria-label="GPU navigation">
-            <div class="sidebar-logo">GPU</div>
+            <div class="sidebar-logo">GPU<span>Hot</span></div>
 
             <nav class="sidebar-nav" id="view-selector" aria-label="GPU views">
                 <button class="sidebar-btn active" data-view="overview" onclick="switchToView('overview')"
-                    aria-label="Overview: All GPUs" aria-pressed="true" title="All GPUs">All</button>
+                    aria-label="Overview: All GPUs" aria-pressed="true" title="All GPUs">Overview</button>
             </nav>
 
             <div class="sidebar-bottom">
                 <!-- System info -->
                 <div class="system-info" aria-label="System metrics">
-                    <div class="system-metric" aria-label="CPU usage">
-                        <canvas class="system-metric-chart" id="cpu-chart" aria-hidden="true"></canvas>
+                    <div class="sidebar-system-item" aria-label="CPU usage">
+                        <div class="sidebar-system-chart-wrap">
+                            <canvas class="system-metric-chart" id="cpu-chart" aria-hidden="true"></canvas>
+                        </div>
                         <div class="system-metric-value" id="cpu-usage" aria-live="polite">0%</div>
                         <div class="system-metric-label">CPU</div>
                     </div>
-                    <div class="system-metric" aria-label="Memory usage">
-                        <canvas class="system-metric-chart" id="memory-chart" aria-hidden="true"></canvas>
+                    <div class="sidebar-system-item" aria-label="Memory usage">
+                        <div class="sidebar-system-chart-wrap">
+                            <canvas class="system-metric-chart" id="memory-chart" aria-hidden="true"></canvas>
+                        </div>
                         <div class="system-metric-value" id="memory-usage" aria-live="polite">0%</div>
                         <div class="system-metric-label">RAM</div>
                     </div>
                 </div>
 
                 <!-- Theme toggle -->
-                <button id="theme-toggle" class="sidebar-link" title="Toggle theme"
-                    aria-label="Switch to light mode" aria-pressed="false">
-                    <!-- Sun icon (shown in dark mode) -->
-                    <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <button id="theme-toggle" class="sidebar-link" title="System theme"
+                    aria-label="System theme. Click for dark mode" aria-pressed="false">
+                    <!-- System/auto icon (shown in auto mode) -->
+                    <svg class="icon-auto" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                        <circle cx="8" cy="10" r="3"/>
+                        <path d="M17 7l3 3-3 3"/>
+                    </svg>
+                    <!-- Sun icon (shown in light mode) -->
+                    <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;">
                         <circle cx="12" cy="12" r="5"></circle>
                         <line x1="12" y1="1" x2="12" y2="3"></line>
                         <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -173,8 +199,8 @@
                         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
-                    <!-- Moon icon (shown in light mode) -->
-                    <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;">
+                    <!-- Moon icon (shown in dark mode) -->
+                    <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                     </svg>
                 </button>

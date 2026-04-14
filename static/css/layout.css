@@ -1,9 +1,8 @@
 /* ============================================
-   GPU Studio — Layout
-   Sidebar + Main Content Grid
+   GPU Hot — Layout
+   Glassmorphism Sidebar + Bento Grid
    ============================================ */
 
-/* Studio shell — sidebar + main */
 .studio {
     display: flex;
     height: 100vh;
@@ -11,7 +10,7 @@
 }
 
 /* ============================================
-   Sidebar
+   Sidebar — Glassmorphism Panel
    ============================================ */
 
 .sidebar {
@@ -20,114 +19,150 @@
     left: 0;
     bottom: 0;
     width: var(--sidebar-width);
-    background: var(--bg-surface);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding: var(--space-md) 0;
+    align-items: stretch;
+    padding: var(--space-lg) var(--space-md);
     z-index: 100;
-    border-right: 1px solid var(--border-subtle);
+    border-right: 1px solid var(--glass-border);
+    transition: transform var(--transition-slow);
 }
 
 .sidebar-logo {
-    font-size: 11px;
+    font-family: var(--font-sans);
+    font-size: 22px;
     font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text-tertiary);
+    letter-spacing: -0.5px;
     margin-bottom: var(--space-lg);
-    writing-mode: vertical-lr;
-    transform: rotate(180deg);
+    padding: 0 var(--space-sm);
     user-select: none;
-    background: linear-gradient(to bottom, var(--text-secondary), var(--text-tertiary));
+    background: var(--gradient-logo);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    transition: opacity var(--transition-normal);
 }
 
-.sidebar-logo:hover {
-    opacity: 0.8;
+.sidebar-logo span {
+    font-weight: 300;
+    opacity: 0.6;
 }
 
-/* GPU nav list */
+.sidebar-section-label {
+    font-family: var(--font-sans);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-tertiary);
+    padding: var(--space-sm) var(--space-sm);
+    margin-top: var(--space-md);
+}
+
 .sidebar-nav {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--space-xs);
+    gap: 2px;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     -ms-overflow-style: none;
     scrollbar-width: none;
+    padding: 0 var(--space-xs);
 }
 
-.sidebar-nav::-webkit-scrollbar {
-    display: none;
-}
+.sidebar-nav::-webkit-scrollbar { display: none; }
 
 .sidebar-btn {
-    width: 40px;
-    height: 40px;
-    min-height: 40px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: var(--space-sm);
+    width: 100%;
     background: transparent;
-    border: none;
-    border-radius: 6px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
     color: var(--text-tertiary);
     font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
-    transition: background 0.1s, color 0.1s;
+    transition: all var(--transition-fast);
+    padding: 8px 12px;
+    text-align: left;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    flex-shrink: 0;
 }
 
 .sidebar-btn:hover {
     color: var(--text-secondary);
     background: var(--hover-bg);
+    border-color: var(--card-border);
 }
 
 .sidebar-btn.active {
-    color: var(--text-primary);
+    color: var(--accent-text);
     background: var(--accent);
+    border-color: var(--sidebar-active-border);
+    box-shadow: var(--sidebar-active-glow);
 }
 
-/* Focus ring for sidebar buttons */
-.sidebar-btn:focus {
-    outline: none;
-}
-
+.sidebar-btn:focus { outline: none; }
 .sidebar-btn:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset);
 }
 
-/* Sidebar bottom section (system info, links) */
 .sidebar-bottom {
     display: flex;
-    flex-direction: column;
     align-items: center;
     gap: var(--space-sm);
     padding-top: var(--space-md);
+    border-top: 1px solid var(--card-border);
+    margin-top: var(--space-md);
     flex-shrink: 0;
 }
 
 .sidebar-system {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: var(--space-sm);
+    flex: 1;
+    min-width: 0;
+}
+
+.sidebar-system-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.sidebar-system-chart-wrap {
+    width: 32px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.sidebar-system-chart-wrap canvas {
+    display: block !important;
+    width: 32px !important;
+    height: 16px !important;
+}
+
+.sidebar-system-value {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    font-variant-numeric: tabular-nums;
 }
 
 .sidebar-system-label {
+    font-family: var(--font-sans);
     font-size: 9px;
     font-weight: 600;
     text-transform: uppercase;
@@ -135,24 +170,17 @@
     color: var(--text-tertiary);
 }
 
-.sidebar-system-value {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    font-variant-numeric: tabular-nums;
-}
-
 .sidebar-link {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     color: var(--text-tertiary);
     text-decoration: none;
-    border-radius: 6px;
-    transition: color 0.1s, background 0.1s;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
 }
 
 .sidebar-link:hover {
@@ -160,10 +188,7 @@
     background: var(--hover-bg);
 }
 
-.sidebar-link:focus {
-    outline: none;
-}
-
+.sidebar-link:focus { outline: none; }
 .sidebar-link:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset);
@@ -177,7 +202,7 @@
     flex: 1;
     min-height: 0;
     margin-left: var(--sidebar-width);
-    padding: var(--space-xl) max(var(--space-xl), calc((100vw - var(--sidebar-width) - 1800px) / 2)) var(--space-2xl);
+    padding: var(--space-xl) max(var(--space-xl), calc((100vw - var(--sidebar-width) - 1400px) / 2)) var(--space-2xl);
     overflow-y: auto;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
@@ -190,9 +215,10 @@
 }
 
 .header-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-secondary);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-tertiary);
     letter-spacing: 0.5px;
     margin-bottom: var(--space-xs);
 }
@@ -207,19 +233,32 @@
     display: flex;
     align-items: center;
     gap: var(--space-sm);
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-tertiary);
+    font-weight: 500;
 }
 
 .status-dot {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: var(--text-tertiary);
+    transition: all var(--transition-normal);
+    flex-shrink: 0;
 }
 
 .status-dot.connected {
-    background: var(--text-secondary);
+    background: var(--status-dot-connected);
+    box-shadow: var(--status-dot-connected-glow);
+}
+
+.status-dot.connecting {
+    animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 0.4; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1.15); }
 }
 
 .version-info {
@@ -233,32 +272,26 @@
     color: var(--accent-text);
     text-decoration: none;
     font-weight: 600;
+    transition: opacity var(--transition-fast);
 }
 
-.update-badge a:hover {
-    text-decoration: underline;
-}
+.update-badge a:hover { opacity: 0.8; text-decoration: underline; }
 
 /* ============================================
-   View / Tab System
+   Tab System
    ============================================ */
 
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 
 /* ============================================
-   Overview Grid (All GPUs view)
+   Overview Grid — Bento Layout
    ============================================ */
 
 .overview-grid {
     display: flex;
     flex-direction: column;
-    gap: var(--space-lg);
+    gap: var(--space-md);
 }
 
 /* Cluster node grouping */
@@ -268,16 +301,17 @@
     gap: var(--space-sm);
 }
 
-.node-group+.node-group {
+.node-group + .node-group {
     padding-top: var(--space-lg);
-    border-top: 1px solid var(--border-subtle);
+    border-top: 1px solid var(--divider-color);
 }
 
 .node-label {
+    font-family: var(--font-sans);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     color: var(--text-tertiary);
     padding-left: var(--space-xs);
 }
@@ -285,13 +319,10 @@
 .node-grid {
     display: flex;
     flex-direction: column;
-    gap: 0;
+    gap: var(--space-sm);
 }
 
-/* ============================================
-   Loading State
-   ============================================ */
-
+/* Loading */
 .loading {
     display: flex;
     justify-content: center;
@@ -305,44 +336,29 @@
     width: 20px;
     height: 20px;
     border: 2px solid var(--border-subtle);
-    border-top: 2px solid var(--text-tertiary);
+    border-top: 2px solid var(--accent-text);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin-right: var(--space-sm);
 }
 
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
-/* Loading dot — simple pulsing circle */
 .loading-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--text-tertiary);
+    background: var(--accent-text);
     margin-right: var(--space-sm);
     animation: pulse-loading 1.2s ease-in-out infinite;
 }
 
 @keyframes pulse-loading {
-
-    0%,
-    100% {
-        opacity: 0.3;
-        transform: scale(0.85);
-    }
-
-    50% {
-        opacity: 1;
-        transform: scale(1);
-    }
+    0%, 100% { opacity: 0.3; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1); }
 }
 
 /* ============================================
@@ -357,72 +373,45 @@
         left: 0;
         right: 0;
         width: 100%;
-        height: 48px;
+        height: 56px;
         flex-direction: row;
         padding: 0 var(--space-sm);
         border-right: none;
-        border-top: 1px solid var(--border-subtle);
+        border-top: 1px solid var(--glass-border);
+        align-items: center;
     }
 
-    .sidebar-logo {
-        display: none;
-    }
+    .sidebar-logo { display: none; }
+    .sidebar-section-label { display: none; }
 
     .sidebar-nav {
         flex-direction: row;
-        gap: var(--space-xs);
+        gap: 2px;
+        padding: 0;
+    }
+
+    .sidebar-btn {
+        padding: 6px 10px;
+        font-size: 11px;
     }
 
     .sidebar-bottom {
-        flex-direction: row;
+        border-top: none;
         margin-top: 0;
-        margin-left: auto;
         padding-top: 0;
-        gap: var(--space-sm);
+        flex-direction: row;
+        margin-left: auto;
     }
+
+    .sidebar-system { display: none; }
 
     .main {
         margin-left: 0;
-        margin-bottom: 48px;
+        margin-bottom: 56px;
         padding: var(--space-lg) var(--space-md) var(--space-xl);
     }
 
-    /* Horizontal scroll for overview cards on mobile */
-    .overview-grid {
-        display: flex;
-        flex-direction: row;
-        gap: var(--space-md);
-        overflow-x: auto;
-        overflow-y: visible;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: var(--space-sm);
-        scrollbar-width: thin;
-    }
-
-    .overview-grid::-webkit-scrollbar {
-        height: 4px;
-    }
-
-    .overview-grid::-webkit-scrollbar-thumb {
-        background: var(--border-subtle);
-        border-radius: 2px;
-    }
-
-    .overview-gpu-card {
-        flex: 0 0 280px;
-        min-width: 280px;
-        scroll-snap-align: start;
-    }
-
-    .node-group {
-        flex: 0 0 auto;
-        min-width: 280px;
-    }
-
-    .node-grid {
-        flex-direction: column;
-    }
+    .bg-mesh { display: none; }
 }
 
 @media (max-width: 480px) {

@@ -306,7 +306,7 @@ function initGPUCharts(gpuId) {
             config.options.crosshair = {
                 enabled: true,
                 lineWidth: 1,
-                color: 'rgba(130, 177, 255, 0.25)'
+                color: (typeof getChartColors === 'function' ? getChartColors().crosshair : null) || 'rgba(130, 177, 255, 0.25)'
             };
         }
 
@@ -467,6 +467,7 @@ function initSidebarCharts() {
     const cpuCanvas = document.getElementById('cpu-chart');
     const memCanvas = document.getElementById('memory-chart');
 
+    const colors = getChartColors();
     const sysChartOpts = {
         responsive: true,
         maintainAspectRatio: false,
@@ -488,7 +489,7 @@ function initSidebarCharts() {
                 labels: systemData.cpu.labels,
                 datasets: [{
                     data: systemData.cpu.data,
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    borderColor: colors.sidebarStroke,
                     backgroundColor: 'transparent',
                     borderWidth: 1.5,
                     tension: 0.3,
@@ -507,7 +508,7 @@ function initSidebarCharts() {
                 labels: systemData.memory.labels,
                 datasets: [{
                     data: systemData.memory.data,
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    borderColor: colors.sidebarStroke,
                     backgroundColor: 'transparent',
                     borderWidth: 1.5,
                     tension: 0.3,
@@ -801,6 +802,11 @@ function refreshAllChartsTheme() {
                 }
             }
             
+            // Update crosshair color
+            if (chart.options.crosshair) {
+                chart.options.crosshair.color = colors.crosshair;
+            }
+            
             // Trigger update
             try {
                 chart.update('none');
@@ -816,7 +822,7 @@ function refreshAllChartsTheme() {
         if (!chart) return;
         
         if (chart.data.datasets && chart.data.datasets[0]) {
-            chart.data.datasets[0].borderColor = colors.stroke;
+            chart.data.datasets[0].borderColor = colors.sidebarStroke;
         }
         
         try {

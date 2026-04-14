@@ -1,7 +1,8 @@
 /**
  * Tests for static/js/theme.js
  *
- * Theme system: auto-detect, toggle, localStorage persistence
+ * Theme system: auto/dark/light three-state toggle, localStorage persistence,
+ * OS preference detection, and FOUC prevention compatibility
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
@@ -15,7 +16,6 @@ const srcPath = join(__dirname, '../../static/js/theme.js');
 const sourceCode = readFileSync(srcPath, 'utf-8');
 
 function loadThemeModule() {
-    // Mock localStorage
     const store = {};
     globalThis.localStorage = {
         getItem: (key) => store[key] || null,
@@ -24,7 +24,6 @@ function loadThemeModule() {
         clear: () => { Object.keys(store).forEach(k => delete store[k]); }
     };
 
-    // Mock matchMedia
     globalThis.matchMedia = vi.fn((query) => ({
         matches: query.includes('dark'),
         media: query,
@@ -32,15 +31,10 @@ function loadThemeModule() {
         removeEventListener: vi.fn()
     }));
 
-    // Mock document.documentElement
     const mockElement = {
         _attributes: {},
-        setAttribute(name, value) {
-            this._attributes[name] = value;
-        },
-        getAttribute(name) {
-            return this._attributes[name] || null;
-        }
+        setAttribute(name, value) { this._attributes[name] = value; },
+        getAttribute(name) { return this._attributes[name] || null; }
     };
     
     globalThis.document = {
@@ -49,7 +43,6 @@ function loadThemeModule() {
         getElementById: vi.fn()
     };
 
-    // Mock CustomEvent
     globalThis.CustomEvent = class CustomEvent {
         constructor(type, options = {}) {
             this.type = type;
@@ -57,7 +50,6 @@ function loadThemeModule() {
         }
     };
 
-    // Load the source and export to globalThis
     const wrappedCode = `(function() { ${sourceCode}\n
         globalThis.ThemeSystem = ThemeSystem;
     })();`;
@@ -75,55 +67,89 @@ describe('ThemeSystem', () => {
 
     afterEach(() => {
         vi.clearAllMocks();
-        store = {};
     });
 
     describe('constants', () => {
         it('defines STORAGE_KEY', () => {
-            expect(ThemeSystem.STORAGE_KEY).toBe('gpu-hot-theme');
+            expect(ThemeSystem.STORAGE_KEY).toBe('gpu-hot-theme-mode');
         });
 
-        it('defines DARK and LIGHT constants', () => {
+        it('defines LEGACY_KEY', () => {
+            expect(ThemeSystem.LEGACY_KEY).toBe('gpu-hot-theme');
+        });
+
+        it('defines DARK and LIGHT and AUTO constants', () => {
             expect(ThemeSystem.DARK).toBe('dark');
             expect(ThemeSystem.LIGHT).toBe('light');
+            expect(ThemeSystem.AUTO).toBe('auto');
         });
     });
 
     describe('init', () => {
-        it('applies stored preference over OS preference', () => {
-            store['gpu-hot-theme'] = 'light';
-            
+        it('applies stored mode preference', () => {
+            store['gpu-hot-theme-mode'] = 'light';
             ThemeSystem.init();
-            
             expect(document.documentElement.getAttribute('data-theme')).toBe('light');
         });
 
-        it('applies OS preference when no stored preference', () => {
-            // matchMedia returns dark by default in our mock
+        it('follows OS preference when mode is auto', () => {
             ThemeSystem.init();
-            
             expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
         });
 
-        it('defaults to dark when no preference available', () => {
+        it('defaults to dark when no preference and no OS detection', () => {
             globalThis.matchMedia = vi.fn(() => ({
                 matches: false,
                 media: '',
                 addEventListener: vi.fn()
             }));
-            
             ThemeSystem.init();
-            
             expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
         });
 
         it('dispatches themechange event', () => {
             ThemeSystem.init();
-            
             expect(document.dispatchEvent).toHaveBeenCalled();
             const event = document.dispatchEvent.mock.calls[0][0];
             expect(event.type).toBe('themechange');
             expect(event.detail.theme).toBeDefined();
+        });
+
+        it('migrates legacy storage key', () => {
+            store['gpu-hot-theme'] = 'light';
+            ThemeSystem.init();
+            expect(store['gpu-hot-theme-mode']).toBe('light');
+            expect(store['gpu-hot-theme']).toBeUndefined();
+        });
+    });
+
+    describe('getMode', () => {
+        it('returns stored mode when set', () => {
+            store['gpu-hot-theme-mode'] = 'dark';
+            expect(ThemeSystem.getMode()).toBe('dark');
+        });
+
+        it('returns auto when no mode stored', () => {
+            expect(ThemeSystem.getMode()).toBe('auto');
+        });
+    });
+
+    describe('resolveTheme', () => {
+        it('resolves dark to dark', () => {
+            expect(ThemeSystem.resolveTheme('dark')).toBe('dark');
+        });
+
+        it('resolves light to light', () => {
+            expect(ThemeSystem.resolveTheme('light')).toBe('light');
+        });
+
+        it('resolves auto to OS preference', () => {
+            expect(ThemeSystem.resolveTheme('auto')).toBe('dark');
+        });
+
+        it('resolves auto to dark when OS detection unavailable', () => {
+            globalThis.matchMedia = undefined;
+            expect(ThemeSystem.resolveTheme('auto')).toBe('dark');
         });
     });
 
@@ -134,7 +160,6 @@ describe('ThemeSystem', () => {
                 media: query,
                 addEventListener: vi.fn()
             }));
-            
             expect(ThemeSystem.getOSPreference()).toBe('dark');
         });
 
@@ -144,13 +169,11 @@ describe('ThemeSystem', () => {
                 media: query,
                 addEventListener: vi.fn()
             }));
-            
             expect(ThemeSystem.getOSPreference()).toBe('light');
         });
 
         it('returns null when matchMedia not available', () => {
             globalThis.matchMedia = undefined;
-            
             expect(ThemeSystem.getOSPreference()).toBeNull();
         });
     });
@@ -158,13 +181,11 @@ describe('ThemeSystem', () => {
     describe('applyTheme', () => {
         it('sets data-theme attribute', () => {
             ThemeSystem.applyTheme('light');
-            
             expect(document.documentElement.getAttribute('data-theme')).toBe('light');
         });
 
         it('dispatches themechange event with theme detail', () => {
             ThemeSystem.applyTheme('dark');
-            
             expect(document.dispatchEvent).toHaveBeenCalled();
             const event = document.dispatchEvent.mock.calls[document.dispatchEvent.mock.calls.length - 1][0];
             expect(event.type).toBe('themechange');
@@ -173,52 +194,45 @@ describe('ThemeSystem', () => {
     });
 
     describe('toggle', () => {
-        it('switches from dark to light', () => {
-            document.documentElement._attributes['data-theme'] = 'dark';
-            
+        it('cycles from auto to dark', () => {
             ThemeSystem.toggle();
-            
+            expect(store['gpu-hot-theme-mode']).toBe('dark');
+        });
+
+        it('cycles from dark to light', () => {
+            store['gpu-hot-theme-mode'] = 'dark';
+            ThemeSystem.toggle();
             expect(document.documentElement.getAttribute('data-theme')).toBe('light');
-            expect(store['gpu-hot-theme']).toBe('light');
+            expect(store['gpu-hot-theme-mode']).toBe('light');
         });
 
-        it('switches from light to dark', () => {
-            document.documentElement._attributes['data-theme'] = 'light';
-            
+        it('cycles from light to auto', () => {
+            store['gpu-hot-theme-mode'] = 'light';
             ThemeSystem.toggle();
-            
-            expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
-            expect(store['gpu-hot-theme']).toBe('dark');
+            expect(store['gpu-hot-theme-mode']).toBe('auto');
         });
 
-        it('stores preference in localStorage', () => {
-            document.documentElement._attributes['data-theme'] = 'dark';
-            
+        it('stores mode in localStorage', () => {
             ThemeSystem.toggle();
-            
-            expect(localStorage.getItem('gpu-hot-theme')).toBe('light');
+            expect(localStorage.getItem('gpu-hot-theme-mode')).toBe('dark');
         });
     });
 
     describe('resetToAuto', () => {
         it('clears stored preference', () => {
-            store['gpu-hot-theme'] = 'light';
-            
+            store['gpu-hot-theme-mode'] = 'light';
             ThemeSystem.resetToAuto();
-            
-            expect(localStorage.getItem('gpu-hot-theme')).toBeNull();
+            expect(localStorage.getItem('gpu-hot-theme-mode')).toBeNull();
         });
 
         it('applies OS preference after reset', () => {
-            store['gpu-hot-theme'] = 'light';
+            store['gpu-hot-theme-mode'] = 'light';
             globalThis.matchMedia = vi.fn((query) => ({
                 matches: query.includes('dark'),
                 media: query,
                 addEventListener: vi.fn()
             }));
-            
             ThemeSystem.resetToAuto();
-            
             expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
         });
     });
@@ -226,36 +240,30 @@ describe('ThemeSystem', () => {
     describe('getCurrentTheme', () => {
         it('returns current theme from attribute', () => {
             document.documentElement._attributes['data-theme'] = 'light';
-            
             expect(ThemeSystem.getCurrentTheme()).toBe('light');
         });
 
         it('returns dark as default when no attribute', () => {
             document.documentElement._attributes = {};
-            
             expect(ThemeSystem.getCurrentTheme()).toBe('dark');
         });
     });
 
     describe('updateToggleButton', () => {
-        it('updates aria-label based on theme', () => {
+        it('updates aria-label based on mode', () => {
             const mockBtn = {
                 setAttribute: vi.fn(),
-                querySelector: vi.fn((cls) => ({ style: {} }))
+                querySelector: vi.fn()
             };
             document.getElementById = vi.fn(() => mockBtn);
             
-            ThemeSystem.updateToggleButton('dark');
-            
-            expect(mockBtn.setAttribute).toHaveBeenCalledWith('aria-label', 'Switch to light mode');
+            ThemeSystem._updateToggleButton('dark');
+            expect(mockBtn.setAttribute).toHaveBeenCalledWith('aria-label', 'Dark theme. Click for light mode');
         });
 
         it('handles missing button gracefully', () => {
             document.getElementById = vi.fn(() => null);
-            
-            ThemeSystem.updateToggleButton('dark');
-            
-            // Should not throw
+            ThemeSystem._updateToggleButton('dark');
             expect(true).toBe(true);
         });
     });
@@ -265,7 +273,6 @@ describe('ThemeSystem', () => {
             globalThis.matchMedia = vi.fn((query) => ({
                 matches: query.includes('reduce')
             }));
-            
             expect(ThemeSystem.prefersReducedMotion()).toBe(true);
         });
 
@@ -273,7 +280,6 @@ describe('ThemeSystem', () => {
             globalThis.matchMedia = vi.fn(() => ({
                 matches: false
             }));
-            
             expect(ThemeSystem.prefersReducedMotion()).toBe(false);
         });
     });

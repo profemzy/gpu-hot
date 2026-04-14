@@ -40,11 +40,9 @@ document.addEventListener('DOMContentLoaded', function() {
  * Initialize theme system and bind toggle button
  */
 function initThemeSystem() {
-    // Initialize theme detection and apply stored preference
     if (window.ThemeSystem) {
         window.ThemeSystem.init();
         
-        // Bind toggle button click handler
         const toggleBtn = document.getElementById('theme-toggle');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', function() {

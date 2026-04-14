@@ -1,137 +1,130 @@
 /**
- * Theme System — Auto-detect + Manual Toggle
- * 
- * Priority: localStorage override > OS preference > default (dark)
+ * Theme System — Auto / Dark / Light
+ *
+ * Three-state toggle: Auto (follows OS) → Dark → Light → Auto
+ * Priority: localStorage mode > OS preference > dark fallback
  * Emits 'themechange' event on document for other modules to react
  */
-
 const ThemeSystem = {
-  STORAGE_KEY: 'gpu-hot-theme',
+  STORAGE_KEY: 'gpu-hot-theme-mode',
+  LEGACY_KEY: 'gpu-hot-theme',
   DARK: 'dark',
   LIGHT: 'light',
-  
-  /**
-   * Initialize theme system on page load
-   * Applies stored preference or falls back to OS preference
-   */
+  AUTO: 'auto',
+
   init() {
-    const stored = localStorage.getItem(this.STORAGE_KEY);
-    const osPreference = this.getOSPreference();
-    
-    // Priority: stored > OS > default dark
-    const theme = stored || osPreference || this.DARK;
+    this._migrate();
+
+    const mode = this.getMode();
+    const theme = this.resolveTheme(mode);
     this.applyTheme(theme);
-    
-    // Listen for OS preference changes (only if no stored override)
-    this.watchOSPreference();
+    this._updateToggleButton(mode);
+    this._watchOSPreference();
   },
-  
-  /**
-   * Get OS color scheme preference
-   * @returns {'dark'|'light'|null}
-   */
+
+  _migrate() {
+    const legacy = localStorage.getItem(this.LEGACY_KEY);
+    if (legacy) {
+      localStorage.setItem(this.STORAGE_KEY, legacy);
+      localStorage.removeItem(this.LEGACY_KEY);
+    }
+  },
+
+  getMode() {
+    return localStorage.getItem(this.STORAGE_KEY) || this.AUTO;
+  },
+
+  resolveTheme(mode) {
+    if (mode === this.DARK) return this.DARK;
+    if (mode === this.LIGHT) return this.LIGHT;
+    return this.getOSPreference() || this.DARK;
+  },
+
   getOSPreference() {
     if (!window.matchMedia) return null;
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) return this.DARK;
     if (window.matchMedia('(prefers-color-scheme: light)').matches) return this.LIGHT;
     return null;
   },
-  
-  /**
-   * Watch for OS preference changes
-   * Only applies if user hasn't set a manual override
-   */
-  watchOSPreference() {
-    if (!window.matchMedia) return;
-    
-    const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const lightQuery = window.matchMedia('(prefers-color-scheme: light)');
-    
-    darkQuery.addEventListener('change', (e) => {
-      if (!localStorage.getItem(this.STORAGE_KEY)) {
-        this.applyTheme(e.matches ? this.DARK : this.LIGHT);
-      }
-    });
-  },
-  
-  /**
-   * Apply theme to document
-   * @param {'dark'|'light'} theme
-   */
+
   applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
-    this.updateToggleButton(theme);
-    
-    // Emit event for charts and other components
-    document.dispatchEvent(new CustomEvent('themechange', { 
-      detail: { theme } 
-    }));
+    document.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
   },
-  
-  /**
-   * Toggle between dark and light
-   * Stores preference in localStorage
-   */
+
   toggle() {
-    const current = document.documentElement.getAttribute('data-theme') || this.DARK;
-    const next = current === this.DARK ? this.LIGHT : this.DARK;
-    
-    localStorage.setItem(this.STORAGE_KEY, next);
-    this.applyTheme(next);
+    const currentMode = this.getMode();
+    const modes = [this.AUTO, this.DARK, this.LIGHT];
+    const nextIndex = (modes.indexOf(currentMode) + 1) % modes.length;
+    const nextMode = modes[nextIndex];
+
+    localStorage.setItem(this.STORAGE_KEY, nextMode);
+    const theme = this.resolveTheme(nextMode);
+    this.applyTheme(theme);
+    this._updateToggleButton(nextMode);
   },
-  
-  /**
-   * Clear stored preference and fall back to OS preference
-   */
+
   resetToAuto() {
     localStorage.removeItem(this.STORAGE_KEY);
-    const osPreference = this.getOSPreference();
-    this.applyTheme(osPreference || this.DARK);
+    const theme = this.resolveTheme(this.AUTO);
+    this.applyTheme(theme);
+    this._updateToggleButton(this.AUTO);
   },
-  
-  /**
-   * Get current theme
-   * @returns {'dark'|'light'}
-   */
+
   getCurrentTheme() {
     return document.documentElement.getAttribute('data-theme') || this.DARK;
   },
-  
-  /**
-   * Update toggle button icon (sun/moon)
-   * @param {'dark'|'light'} theme
-   */
-  updateToggleButton(theme) {
+
+  _updateToggleButton(mode) {
     const btn = document.getElementById('theme-toggle');
     if (!btn) return;
-    
+
     const sunIcon = btn.querySelector('.icon-sun');
     const moonIcon = btn.querySelector('.icon-moon');
-    
-    if (sunIcon && moonIcon) {
-      sunIcon.style.display = theme === this.DARK ? 'block' : 'none';
-      moonIcon.style.display = theme === this.LIGHT ? 'block' : 'none';
+    const autoIcon = btn.querySelector('.icon-auto');
+
+    if (sunIcon) sunIcon.style.display = 'none';
+    if (moonIcon) moonIcon.style.display = 'none';
+    if (autoIcon) autoIcon.style.display = 'none';
+
+    if (mode === this.DARK && moonIcon) {
+      moonIcon.style.display = 'block';
+    } else if (mode === this.LIGHT && sunIcon) {
+      sunIcon.style.display = 'block';
+    } else if (mode === this.AUTO && autoIcon) {
+      autoIcon.style.display = 'block';
+    } else if (mode === this.AUTO && moonIcon) {
+      moonIcon.style.display = 'block';
     }
-    
-    btn.setAttribute('aria-label', 
-      theme === this.DARK ? 'Switch to light mode' : 'Switch to dark mode'
-    );
-    btn.setAttribute('aria-pressed', theme === this.LIGHT ? 'true' : 'false');
+
+    const labels = {};
+    labels[this.AUTO] = 'System theme. Click for dark mode';
+    labels[this.DARK] = 'Dark theme. Click for light mode';
+    labels[this.LIGHT] = 'Light theme. Click for system theme';
+
+    btn.setAttribute('aria-label', labels[mode] || 'Switch theme');
+    btn.setAttribute('title', labels[mode] || 'Switch theme');
+    btn.setAttribute('aria-pressed', String(mode !== this.AUTO));
   },
-  
-  /**
-   * Check if reduced motion is preferred
-   * @returns {boolean}
-   */
+
+  _watchOSPreference() {
+    if (!window.matchMedia) return;
+    const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    darkQuery.addEventListener('change', () => {
+      if (this.getMode() === this.AUTO) {
+        const theme = this.resolveTheme(this.AUTO);
+        this.applyTheme(theme);
+      }
+    });
+  },
+
   prefersReducedMotion() {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 };
 
-// Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = ThemeSystem;
 }
 
-// Global assignment for non-module usage
 window.ThemeSystem = ThemeSystem;

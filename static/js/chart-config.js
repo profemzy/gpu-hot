@@ -22,6 +22,8 @@ function getChartColors() {
         tooltipBody: style.getPropertyValue('--text-secondary').trim() || 'rgba(238, 240, 244, 0.7)',
         warning: style.getPropertyValue('--warning').trim() || '#f5a623',
         legendColor: style.getPropertyValue('--text-tertiary').trim() || 'rgba(255, 255, 255, 0.5)',
+        crosshair: style.getPropertyValue('--chart-crosshair').trim() || 'rgba(130, 177, 255, 0.25)',
+        sidebarStroke: style.getPropertyValue('--sidebar-chart-stroke').trim() || 'rgba(255, 255, 255, 0.5)',
     };
 }
 
